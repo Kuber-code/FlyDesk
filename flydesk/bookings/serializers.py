@@ -9,6 +9,7 @@ PASSENGER_CHOICES = ["adult", "child", "infant_without_seat"]
 class BookingPassengerSerializer(serializers.Serializer):
     type = serializers.ChoiceField(choices=PASSENGER_CHOICES, default="adult")
     title = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    gender = serializers.ChoiceField(choices=["m", "f"], required=False, allow_null=True)
     given_name = serializers.CharField()
     family_name = serializers.CharField()
     born_on = serializers.DateField()

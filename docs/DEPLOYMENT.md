@@ -9,7 +9,7 @@ Two things live here: **how to ship Phase 1** (run it, publish it, deploy it) an
 
 1. Run locally with `docker compose up --build` (Mongo + app).
 2. `git init` → push to a **public** GitHub repo. CI (`.github/workflows/ci.yml`)
-   runs ruff + , pusblack + tests on every push.
+   runs ruff + black + tests on every push.
 3. Deploy the container to **Coolify** (recommended — you self-host it), pointed at
    the GitHub repo, with a MongoDB resource and env vars. HTTPS is automatic.
 4. Build Phases 2–4 in order; each ends at a demo-able checkpoint.

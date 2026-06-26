@@ -33,8 +33,8 @@ def test_search_returns_normalized_offers(load, monkeypatch):
     )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["count"] == 2
-    assert body["offers"][0]["total"]["amount"] == "389.90"  # cheapest first
+    assert body["count"] == 3
+    assert body["offers"][0]["total"]["amount"] == "217.02"  # cheapest first (real AA fare)
     assert body["offers"][0]["provider"] == "duffel"
 
 

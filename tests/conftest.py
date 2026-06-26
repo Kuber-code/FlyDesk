@@ -41,6 +41,7 @@ def adult_passenger_payload():
     return {
         "type": "adult",
         "title": "mr",
+        "gender": "m",
         "given_name": "Tony",
         "family_name": "Stark",
         "born_on": "1980-07-24",

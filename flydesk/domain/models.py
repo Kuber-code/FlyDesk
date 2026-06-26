@@ -224,6 +224,7 @@ class BookingPassenger(BaseModel):
 
     type: PassengerType = PassengerType.ADULT
     title: str | None = None
+    gender: str | None = None  # Duffel requires "m"/"f" on order passengers (live-API finding)
     given_name: str
     family_name: str
     born_on: date

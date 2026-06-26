@@ -1,55 +1,268 @@
 {
   "data": {
-    "id": "ord_0000AkOrderExample01",
-    "live_mode": false,
-    "booking_reference": "RZ2PML",
-    "total_amount": "412.40",
-    "total_currency": "GBP",
-    "base_amount": "320.00",
-    "tax_amount": "92.40",
-    "created_at": "2026-06-26T10:05:42.000000Z",
-    "synced_at": "2026-06-26T10:05:43.000000Z",
-    "owner": { "id": "arl_0000AkBA", "iata_code": "BA", "name": "British Airways" },
-    "documents": [
-      { "type": "electronic_ticket", "unique_identifier": "125-2378451090" }
+    "void_window_ends_at": null,
+    "synced_at": "2026-06-26T22:43:28Z",
+    "available_actions": [
+      "cancel",
+      "change",
+      "update"
     ],
-    "passengers": [
+    "documents": [
       {
-        "id": "pas_0000AkPassengerAdult01",
-        "type": "adult",
-        "title": "mr",
-        "given_name": "Tony",
-        "family_name": "Stark",
-        "born_on": "1980-07-24",
-        "email": "tony@starkindustries.com",
-        "phone_number": "+442080160508"
+        "passenger_ids": [
+          "pas_0000B7jtesIdzENdhHQFF2"
+        ],
+        "unique_identifier": "1",
+        "type": "electronic_ticket"
       }
     ],
+    "airline_initiated_changes": [],
+    "tax_currency": "USD",
+    "tax_amount": "33.10",
+    "base_amount": "183.92",
+    "base_currency": "USD",
+    "total_currency": "USD",
+    "offer_id": "off_0000B7jtesXV1dOyGCX6by",
+    "booking_reference": "345FKK",
+    "booking_references": [
+      {
+        "booking_reference": "345FKK",
+        "carrier": {
+          "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AA.svg",
+          "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/AA.svg",
+          "conditions_of_carriage_url": "https://www.aa.com/i18n/customer-service/support/conditions-of-carriage.jsp",
+          "iata_code": "AA",
+          "name": "American Airlines",
+          "id": "arl_00009VME7DAGiJjwomhv32"
+        }
+      }
+    ],
+    "payment_status": {
+      "price_guarantee_expires_at": null,
+      "payment_required_by": null,
+      "paid_at": "2026-06-26T22:43:28Z",
+      "awaiting_payment": false
+    },
+    "live_mode": false,
+    "total_amount": "217.02",
+    "created_at": "2026-06-26T22:43:28.577123Z",
     "slices": [
       {
-        "id": "sli_0000DirectBAslice",
-        "origin": { "iata_code": "LHR", "name": "Heathrow Airport", "city_name": "London", "type": "airport" },
-        "destination": { "iata_code": "JFK", "name": "John F. Kennedy International Airport", "city_name": "New York", "type": "airport" },
-        "duration": "PT8H10M",
-        "fare_brand_name": "Basic",
+        "destination_type": "airport",
+        "origin_type": "airport",
+        "fare_brand_name": "Basic Economy",
         "segments": [
           {
-            "id": "seg_0000DirectBAseg1",
-            "origin": { "iata_code": "LHR", "name": "Heathrow Airport", "city_name": "London", "type": "airport" },
-            "destination": { "iata_code": "JFK", "name": "John F. Kennedy International Airport", "city_name": "New York", "type": "airport" },
-            "departing_at": "2026-08-15T08:30:00",
-            "arriving_at": "2026-08-15T11:40:00",
-            "marketing_carrier": { "iata_code": "BA", "name": "British Airways" },
-            "operating_carrier": { "iata_code": "BA", "name": "British Airways" },
-            "marketing_carrier_flight_number": "175",
-            "aircraft": { "iata_code": "777", "name": "Boeing 777-300ER" },
-            "duration": "PT8H10M",
+            "origin_terminal": "2",
+            "destination_terminal": "1",
+            "aircraft": {
+              "iata_code": "320",
+              "name": "Airbus A320",
+              "id": "arc_00009VMF8AgpV5sdO0xXAr"
+            },
+            "departing_at": "2026-08-15T10:50:00",
+            "arriving_at": "2026-08-15T13:48:00",
+            "stops": [],
+            "operating_carrier_flight_number": "10",
+            "operating_carrier": {
+              "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AA.svg",
+              "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/AA.svg",
+              "conditions_of_carriage_url": "https://www.aa.com/i18n/customer-service/support/conditions-of-carriage.jsp",
+              "iata_code": "AA",
+              "name": "American Airlines",
+              "id": "arl_00009VME7DAGiJjwomhv32"
+            },
+            "marketing_carrier_flight_number": "10",
+            "marketing_carrier": {
+              "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AA.svg",
+              "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/AA.svg",
+              "conditions_of_carriage_url": "https://www.aa.com/i18n/customer-service/support/conditions-of-carriage.jsp",
+              "iata_code": "AA",
+              "name": "American Airlines",
+              "id": "arl_00009VME7DAGiJjwomhv32"
+            },
             "passengers": [
-              { "passenger_id": "pas_0000AkPassengerAdult01", "cabin_class": "economy", "cabin_class_marketing_name": "Economy Basic", "fare_basis_code": "OBB0RGO" }
-            ]
+              {
+                "baggages": [
+                  {
+                    "quantity": 1,
+                    "type": "checked"
+                  },
+                  {
+                    "quantity": 1,
+                    "type": "carry_on"
+                  }
+                ],
+                "cabin_class_marketing_name": "Economy",
+                "passenger_id": "pas_0000B7jtesIdzENdhHQFF2",
+                "seat": null,
+                "cabin_class": "economy"
+              }
+            ],
+            "distance": "5539.8359982030115",
+            "duration": "PT7H58M",
+            "destination": {
+              "iata_country_code": "US",
+              "city_name": "New York",
+              "icao_code": "KJFK",
+              "iata_city_code": "NYC",
+              "iata_code": "JFK",
+              "latitude": 40.640556,
+              "longitude": -73.778519,
+              "city": {
+                "iata_country_code": "US",
+                "city_name": null,
+                "icao_code": null,
+                "iata_city_code": "NYC",
+                "iata_code": "NYC",
+                "latitude": null,
+                "longitude": null,
+                "time_zone": null,
+                "type": "city",
+                "name": "New York",
+                "id": "cit_nyc_us"
+              },
+              "time_zone": "America/New_York",
+              "type": "airport",
+              "name": "John F. Kennedy International Airport",
+              "id": "arp_jfk_us"
+            },
+            "origin": {
+              "iata_country_code": "GB",
+              "city_name": "London",
+              "icao_code": "EGLL",
+              "iata_city_code": "LON",
+              "iata_code": "LHR",
+              "latitude": 51.470311,
+              "longitude": -0.458118,
+              "city": {
+                "iata_country_code": "GB",
+                "city_name": null,
+                "icao_code": null,
+                "iata_city_code": "LON",
+                "iata_code": "LON",
+                "latitude": null,
+                "longitude": null,
+                "time_zone": null,
+                "type": "city",
+                "name": "London",
+                "id": "cit_lon_gb"
+              },
+              "time_zone": "Europe/London",
+              "type": "airport",
+              "name": "Heathrow Airport",
+              "id": "arp_lhr_gb"
+            },
+            "id": "seg_0000B7jtesXV1dOyGCX6bw"
           }
-        ]
+        ],
+        "conditions": {
+          "change_before_departure": {
+            "penalty_currency": "USD",
+            "penalty_amount": "40.00",
+            "allowed": true
+          }
+        },
+        "duration": "PT7H58M",
+        "destination": {
+          "iata_country_code": "US",
+          "city_name": "New York",
+          "icao_code": "KJFK",
+          "iata_city_code": "NYC",
+          "iata_code": "JFK",
+          "latitude": 40.640556,
+          "longitude": -73.778519,
+          "city": {
+            "iata_country_code": "US",
+            "city_name": null,
+            "icao_code": null,
+            "iata_city_code": "NYC",
+            "iata_code": "NYC",
+            "latitude": null,
+            "longitude": null,
+            "time_zone": null,
+            "type": "city",
+            "name": "New York",
+            "id": "cit_nyc_us"
+          },
+          "time_zone": "America/New_York",
+          "type": "airport",
+          "name": "John F. Kennedy International Airport",
+          "id": "arp_jfk_us"
+        },
+        "origin": {
+          "iata_country_code": "GB",
+          "city_name": "London",
+          "icao_code": "EGLL",
+          "iata_city_code": "LON",
+          "iata_code": "LHR",
+          "latitude": 51.470311,
+          "longitude": -0.458118,
+          "city": {
+            "iata_country_code": "GB",
+            "city_name": null,
+            "icao_code": null,
+            "iata_city_code": "LON",
+            "iata_code": "LON",
+            "latitude": null,
+            "longitude": null,
+            "time_zone": null,
+            "type": "city",
+            "name": "London",
+            "id": "cit_lon_gb"
+          },
+          "time_zone": "Europe/London",
+          "type": "airport",
+          "name": "Heathrow Airport",
+          "id": "arp_lhr_gb"
+        },
+        "id": "sli_0000B7jtesXV1dOyGCX6bx"
       }
-    ]
+    ],
+    "cancellation": null,
+    "passengers": [
+      {
+        "born_on": "1980-07-24",
+        "loyalty_programme_accounts": [],
+        "family_name": "Stark",
+        "given_name": "Tony",
+        "infant_passenger_id": null,
+        "phone_number": "+442080160508",
+        "user_id": null,
+        "gender": "m",
+        "email": "tony@example.com",
+        "title": "mr",
+        "type": "adult",
+        "id": "pas_0000B7jtesIdzENdhHQFF2"
+      }
+    ],
+    "conditions": {
+      "refund_before_departure": {
+        "penalty_currency": null,
+        "penalty_amount": null,
+        "allowed": false
+      },
+      "change_before_departure": {
+        "penalty_currency": "USD",
+        "penalty_amount": "40.00",
+        "allowed": true
+      }
+    },
+    "cancelled_at": null,
+    "changes": [],
+    "content": "managed",
+    "services": [],
+    "users": [],
+    "metadata": null,
+    "type": "instant",
+    "owner": {
+      "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AA.svg",
+      "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/AA.svg",
+      "conditions_of_carriage_url": "https://www.aa.com/i18n/customer-service/support/conditions-of-carriage.jsp",
+      "iata_code": "AA",
+      "name": "American Airlines",
+      "id": "arl_00009VME7DAGiJjwomhv32"
+    },
+    "id": "ord_0000B7jtf7FZap210t5DHc"
   }
 }

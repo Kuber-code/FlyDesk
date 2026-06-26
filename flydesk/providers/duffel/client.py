@@ -123,6 +123,8 @@ class DuffelProvider(FlightProvider):
                 {
                     "id": slot.id,
                     "title": person.title or "mr",
+                    # Duffel requires gender on order passengers (surfaced by live testing).
+                    "gender": person.gender or "m",
                     "given_name": person.given_name,
                     "family_name": person.family_name,
                     "born_on": person.born_on.isoformat(),

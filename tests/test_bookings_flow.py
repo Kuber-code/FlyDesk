@@ -40,7 +40,7 @@ def test_booking_is_persisted_and_readable(
     )
 
     stored = services.get_booking(order.id, repository=repo)
-    assert stored.booking_reference == "RZ2PML"
+    assert stored.booking_reference == "345FKK"
     assert stored.idempotency_key == "idem-123"
     assert stored.passengers[0].family_name == "Stark"
 
