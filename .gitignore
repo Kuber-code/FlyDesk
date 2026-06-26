@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Django
+*.sqlite3
+db.sqlite3
+/staticfiles/
+/media/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Test / tooling
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Personal interview / portfolio notes — keep OUT of the public repo
+AltexSoft_Portfolio_Projects_Plan.md
+AltexSoft_Senior_Python_Interview_QA.md
+Heineken_Data_Quality_Engineer_Interview_QA.md

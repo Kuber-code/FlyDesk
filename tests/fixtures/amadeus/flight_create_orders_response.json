@@ -1,0 +1,112 @@
+{
+  "data": {
+    "type": "flight-order",
+    "id": "eJzTd9f3dnUJ97IwNDIyMTQGAB8mBQ4%3D",
+    "queuingOfficeId": "NCE4D31SB",
+    "associatedRecords": [
+      {
+        "reference": "X7HG5P",
+        "creationDate": "2026-06-26T10:07:13.000",
+        "originSystemCode": "GDS",
+        "flightOfferId": "1"
+      }
+    ],
+    "travelers": [
+      {
+        "id": "1",
+        "dateOfBirth": "1980-07-24",
+        "name": { "firstName": "TONY", "lastName": "STARK" },
+        "gender": "MALE",
+        "contact": {
+          "purpose": "STANDARD",
+          "phones": [ { "deviceType": "MOBILE", "countryCallingCode": "44", "number": "2080160508" } ],
+          "emailAddress": "tony@starkindustries.com"
+        },
+        "documents": [
+          {
+            "documentType": "PASSPORT",
+            "number": "00000000",
+            "expiryDate": "2030-01-01",
+            "issuanceCountry": "GB",
+            "nationality": "GB",
+            "holder": true
+          }
+        ]
+      }
+    ],
+    "flightOffers": [
+      {
+        "type": "flight-offer",
+        "id": "1",
+        "source": "GDS",
+        "itineraries": [
+          {
+            "segments": [
+              {
+                "departure": { "iataCode": "SYD", "terminal": "1", "at": "2026-08-15T18:25:00" },
+                "arrival": { "iataCode": "SIN", "terminal": "1", "at": "2026-08-15T23:50:00" },
+                "carrierCode": "QF",
+                "number": "81",
+                "aircraft": { "code": "388" },
+                "duration": "PT8H25M",
+                "id": "1",
+                "numberOfStops": 0
+              },
+              {
+                "departure": { "iataCode": "SIN", "terminal": "1", "at": "2026-08-16T07:10:00" },
+                "arrival": { "iataCode": "BKK", "at": "2026-08-16T08:40:00" },
+                "carrierCode": "TG",
+                "number": "404",
+                "aircraft": { "code": "320" },
+                "duration": "PT2H30M",
+                "id": "2",
+                "numberOfStops": 0
+              }
+            ]
+          },
+          {
+            "segments": [
+              {
+                "departure": { "iataCode": "BKK", "at": "2026-08-22T08:55:00" },
+                "arrival": { "iataCode": "SYD", "terminal": "1", "at": "2026-08-22T21:15:00" },
+                "carrierCode": "TG",
+                "number": "475",
+                "aircraft": { "code": "777" },
+                "duration": "PT9H20M",
+                "id": "3",
+                "numberOfStops": 0
+              }
+            ]
+          }
+        ],
+        "price": {
+          "currency": "EUR",
+          "total": "1078.30",
+          "base": "730.00",
+          "grandTotal": "1078.30"
+        },
+        "validatingAirlineCodes": ["TG"],
+        "travelerPricings": [
+          {
+            "travelerId": "1",
+            "fareOption": "STANDARD",
+            "travelerType": "ADULT",
+            "price": { "currency": "EUR", "total": "1078.30", "base": "730.00" },
+            "fareDetailsBySegment": [
+              { "segmentId": "1", "cabin": "ECONOMY", "fareBasis": "OLOWQF", "class": "O" },
+              { "segmentId": "2", "cabin": "ECONOMY", "fareBasis": "OLOWTG", "class": "O" },
+              { "segmentId": "3", "cabin": "ECONOMY", "fareBasis": "OLOWTG", "class": "O" }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "dictionaries": {
+    "locations": {
+      "SYD": { "cityCode": "SYD", "countryCode": "AU" },
+      "SIN": { "cityCode": "SIN", "countryCode": "SG" },
+      "BKK": { "cityCode": "BKK", "countryCode": "TH" }
+    }
+  }
+}

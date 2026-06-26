@@ -1,0 +1,38 @@
+# Phase 1 stack: Django (gunicorn) + MongoDB.
+# Phase 2 adds redis; Phase 3 adds kafka + zookeeper; Phase 4 adds
+# prometheus + grafana. Each phase is a few more services here.
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-insecure-change-me}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,web
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: ${MONGO_DB:-flydesk}
+      DUFFEL_API_TOKEN: ${DUFFEL_API_TOKEN:-}
+      DUFFEL_API_URL: ${DUFFEL_API_URL:-https://api.duffel.com}
+      DUFFEL_API_VERSION: ${DUFFEL_API_VERSION:-v2}
+      FLYDESK_PROVIDER: ${FLYDESK_PROVIDER:-duffel}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo_data:

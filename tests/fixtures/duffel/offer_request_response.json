@@ -1,0 +1,113 @@
+{
+  "data": {
+    "id": "orq_0000Ak20zPexampleOfferReq01",
+    "live_mode": false,
+    "cabin_class": "economy",
+    "created_at": "2026-06-26T10:00:00.123456Z",
+    "passengers": [
+      { "id": "pas_0000AkPassengerAdult01", "type": "adult" }
+    ],
+    "slices": [
+      {
+        "origin": { "iata_code": "LHR", "name": "Heathrow Airport", "city_name": "London", "type": "airport" },
+        "destination": { "iata_code": "JFK", "name": "John F. Kennedy International Airport", "city_name": "New York", "type": "airport" },
+        "departure_date": "2026-08-15"
+      }
+    ],
+    "offers": [
+      {
+        "id": "off_0000ConnectionEI01",
+        "live_mode": false,
+        "total_amount": "389.90",
+        "total_currency": "GBP",
+        "base_amount": "291.00",
+        "base_currency": "GBP",
+        "tax_amount": "98.90",
+        "tax_currency": "GBP",
+        "expires_at": "2026-06-26T11:00:00Z",
+        "owner": { "id": "arl_0000AkEI", "iata_code": "EI", "name": "Aer Lingus" },
+        "passengers": [ { "id": "pas_0000AkPassengerAdult01", "type": "adult" } ],
+        "slices": [
+          {
+            "id": "sli_0000ConnectionEIslice",
+            "origin": { "iata_code": "LHR", "name": "Heathrow Airport", "city_name": "London", "type": "airport" },
+            "destination": { "iata_code": "JFK", "name": "John F. Kennedy International Airport", "city_name": "New York", "type": "airport" },
+            "duration": "PT12H00M",
+            "fare_brand_name": "Saver",
+            "segments": [
+              {
+                "id": "seg_0000ConnEIseg1",
+                "origin": { "iata_code": "LHR", "name": "Heathrow Airport", "city_name": "London", "type": "airport" },
+                "destination": { "iata_code": "DUB", "name": "Dublin Airport", "city_name": "Dublin", "type": "airport" },
+                "departing_at": "2026-08-15T06:55:00",
+                "arriving_at": "2026-08-15T08:15:00",
+                "marketing_carrier": { "iata_code": "EI", "name": "Aer Lingus" },
+                "operating_carrier": { "iata_code": "EI", "name": "Aer Lingus" },
+                "marketing_carrier_flight_number": "151",
+                "aircraft": { "iata_code": "320", "name": "Airbus A320" },
+                "duration": "PT1H20M",
+                "passengers": [
+                  { "passenger_id": "pas_0000AkPassengerAdult01", "cabin_class": "economy", "cabin_class_marketing_name": "Economy Saver", "fare_basis_code": "QLOWEI" }
+                ]
+              },
+              {
+                "id": "seg_0000ConnEIseg2",
+                "origin": { "iata_code": "DUB", "name": "Dublin Airport", "city_name": "Dublin", "type": "airport" },
+                "destination": { "iata_code": "JFK", "name": "John F. Kennedy International Airport", "city_name": "New York", "type": "airport" },
+                "departing_at": "2026-08-15T11:30:00",
+                "arriving_at": "2026-08-15T13:55:00",
+                "marketing_carrier": { "iata_code": "EI", "name": "Aer Lingus" },
+                "operating_carrier": { "iata_code": "EI", "name": "Aer Lingus" },
+                "marketing_carrier_flight_number": "105",
+                "aircraft": { "iata_code": "332", "name": "Airbus A330-200" },
+                "duration": "PT7H25M",
+                "passengers": [
+                  { "passenger_id": "pas_0000AkPassengerAdult01", "cabin_class": "economy", "cabin_class_marketing_name": "Economy Saver", "fare_basis_code": "QLOWEI" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "off_0000DirectBA01",
+        "live_mode": false,
+        "total_amount": "412.40",
+        "total_currency": "GBP",
+        "base_amount": "320.00",
+        "base_currency": "GBP",
+        "tax_amount": "92.40",
+        "tax_currency": "GBP",
+        "expires_at": "2026-06-26T11:00:00Z",
+        "owner": { "id": "arl_0000AkBA", "iata_code": "BA", "name": "British Airways" },
+        "passengers": [ { "id": "pas_0000AkPassengerAdult01", "type": "adult" } ],
+        "slices": [
+          {
+            "id": "sli_0000DirectBAslice",
+            "origin": { "iata_code": "LHR", "name": "Heathrow Airport", "city_name": "London", "type": "airport" },
+            "destination": { "iata_code": "JFK", "name": "John F. Kennedy International Airport", "city_name": "New York", "type": "airport" },
+            "duration": "PT8H10M",
+            "fare_brand_name": "Basic",
+            "segments": [
+              {
+                "id": "seg_0000DirectBAseg1",
+                "origin": { "iata_code": "LHR", "name": "Heathrow Airport", "city_name": "London", "type": "airport" },
+                "destination": { "iata_code": "JFK", "name": "John F. Kennedy International Airport", "city_name": "New York", "type": "airport" },
+                "departing_at": "2026-08-15T08:30:00",
+                "arriving_at": "2026-08-15T11:40:00",
+                "marketing_carrier": { "iata_code": "BA", "name": "British Airways" },
+                "operating_carrier": { "iata_code": "BA", "name": "British Airways" },
+                "marketing_carrier_flight_number": "175",
+                "aircraft": { "iata_code": "777", "name": "Boeing 777-300ER" },
+                "duration": "PT8H10M",
+                "passengers": [
+                  { "passenger_id": "pas_0000AkPassengerAdult01", "cabin_class": "economy", "cabin_class_marketing_name": "Economy Basic", "fare_basis_code": "OBB0RGO" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

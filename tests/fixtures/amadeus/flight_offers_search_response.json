@@ -1,0 +1,105 @@
+{
+  "meta": { "count": 1, "links": { "self": "https://test.api.amadeus.com/v2/shopping/flight-offers" } },
+  "data": [
+    {
+      "type": "flight-offer",
+      "id": "1",
+      "source": "GDS",
+      "instantTicketingRequired": false,
+      "nonHomogeneous": false,
+      "oneWay": false,
+      "lastTicketingDate": "2026-08-01",
+      "numberOfBookableSeats": 9,
+      "itineraries": [
+        {
+          "duration": "PT15H45M",
+          "segments": [
+            {
+              "departure": { "iataCode": "SYD", "terminal": "1", "at": "2026-08-15T18:25:00" },
+              "arrival": { "iataCode": "SIN", "terminal": "1", "at": "2026-08-15T23:50:00" },
+              "carrierCode": "QF",
+              "number": "81",
+              "aircraft": { "code": "388" },
+              "operating": { "carrierCode": "QF" },
+              "duration": "PT8H25M",
+              "id": "1",
+              "numberOfStops": 0,
+              "blacklistedInEU": false
+            },
+            {
+              "departure": { "iataCode": "SIN", "terminal": "1", "at": "2026-08-16T07:10:00" },
+              "arrival": { "iataCode": "BKK", "at": "2026-08-16T08:40:00" },
+              "carrierCode": "TG",
+              "number": "404",
+              "aircraft": { "code": "320" },
+              "operating": { "carrierCode": "TG" },
+              "duration": "PT2H30M",
+              "id": "2",
+              "numberOfStops": 0,
+              "blacklistedInEU": false
+            }
+          ]
+        },
+        {
+          "duration": "PT9H20M",
+          "segments": [
+            {
+              "departure": { "iataCode": "BKK", "at": "2026-08-22T08:55:00" },
+              "arrival": { "iataCode": "SYD", "terminal": "1", "at": "2026-08-22T21:15:00" },
+              "carrierCode": "TG",
+              "number": "475",
+              "aircraft": { "code": "777" },
+              "operating": { "carrierCode": "TG" },
+              "duration": "PT9H20M",
+              "id": "3",
+              "numberOfStops": 0,
+              "blacklistedInEU": false
+            }
+          ]
+        }
+      ],
+      "price": {
+        "currency": "EUR",
+        "total": "1054.70",
+        "base": "730.00",
+        "fees": [
+          { "amount": "0.00", "type": "SUPPLIER" },
+          { "amount": "0.00", "type": "TICKETING" }
+        ],
+        "grandTotal": "1054.70"
+      },
+      "pricingOptions": { "fareType": ["PUBLISHED"], "includedCheckedBagsOnly": true },
+      "validatingAirlineCodes": ["TG"],
+      "travelerPricings": [
+        {
+          "travelerId": "1",
+          "fareOption": "STANDARD",
+          "travelerType": "ADULT",
+          "price": { "currency": "EUR", "total": "1054.70", "base": "730.00" },
+          "fareDetailsBySegment": [
+            { "segmentId": "1", "cabin": "ECONOMY", "fareBasis": "OLOWQF", "class": "O", "includedCheckedBags": { "quantity": 1 } },
+            { "segmentId": "2", "cabin": "ECONOMY", "fareBasis": "OLOWTG", "class": "O", "includedCheckedBags": { "quantity": 1 } },
+            { "segmentId": "3", "cabin": "ECONOMY", "fareBasis": "OLOWTG", "class": "O", "includedCheckedBags": { "quantity": 1 } }
+          ]
+        }
+      ]
+    }
+  ],
+  "dictionaries": {
+    "locations": {
+      "SYD": { "cityCode": "SYD", "countryCode": "AU" },
+      "SIN": { "cityCode": "SIN", "countryCode": "SG" },
+      "BKK": { "cityCode": "BKK", "countryCode": "TH" }
+    },
+    "aircraft": {
+      "388": "AIRBUS A380-800",
+      "320": "AIRBUS A320",
+      "777": "BOEING 777-300ER"
+    },
+    "currencies": { "EUR": "EURO" },
+    "carriers": {
+      "QF": "QANTAS",
+      "TG": "THAI AIRWAYS INTERNATIONAL"
+    }
+  }
+}

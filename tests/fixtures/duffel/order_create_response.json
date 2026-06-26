@@ -1,0 +1,55 @@
+{
+  "data": {
+    "id": "ord_0000AkOrderExample01",
+    "live_mode": false,
+    "booking_reference": "RZ2PML",
+    "total_amount": "412.40",
+    "total_currency": "GBP",
+    "base_amount": "320.00",
+    "tax_amount": "92.40",
+    "created_at": "2026-06-26T10:05:42.000000Z",
+    "synced_at": "2026-06-26T10:05:43.000000Z",
+    "owner": { "id": "arl_0000AkBA", "iata_code": "BA", "name": "British Airways" },
+    "documents": [
+      { "type": "electronic_ticket", "unique_identifier": "125-2378451090" }
+    ],
+    "passengers": [
+      {
+        "id": "pas_0000AkPassengerAdult01",
+        "type": "adult",
+        "title": "mr",
+        "given_name": "Tony",
+        "family_name": "Stark",
+        "born_on": "1980-07-24",
+        "email": "tony@starkindustries.com",
+        "phone_number": "+442080160508"
+      }
+    ],
+    "slices": [
+      {
+        "id": "sli_0000DirectBAslice",
+        "origin": { "iata_code": "LHR", "name": "Heathrow Airport", "city_name": "London", "type": "airport" },
+        "destination": { "iata_code": "JFK", "name": "John F. Kennedy International Airport", "city_name": "New York", "type": "airport" },
+        "duration": "PT8H10M",
+        "fare_brand_name": "Basic",
+        "segments": [
+          {
+            "id": "seg_0000DirectBAseg1",
+            "origin": { "iata_code": "LHR", "name": "Heathrow Airport", "city_name": "London", "type": "airport" },
+            "destination": { "iata_code": "JFK", "name": "John F. Kennedy International Airport", "city_name": "New York", "type": "airport" },
+            "departing_at": "2026-08-15T08:30:00",
+            "arriving_at": "2026-08-15T11:40:00",
+            "marketing_carrier": { "iata_code": "BA", "name": "British Airways" },
+            "operating_carrier": { "iata_code": "BA", "name": "British Airways" },
+            "marketing_carrier_flight_number": "175",
+            "aircraft": { "iata_code": "777", "name": "Boeing 777-300ER" },
+            "duration": "PT8H10M",
+            "passengers": [
+              { "passenger_id": "pas_0000AkPassengerAdult01", "cabin_class": "economy", "cabin_class_marketing_name": "Economy Basic", "fare_basis_code": "OBB0RGO" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
