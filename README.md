@@ -188,7 +188,7 @@ swaps the fakes for **testcontainers** on the integration tests.
 |---|---|---|
 | **1 ✅ (this repo)** | Django+DRF, Pydantic ACL, Mongo, Duffel live, Amadeus modelled, idempotency | Django, Mongo, Pydantic, travel domain |
 | **2 ✅** | async concurrent fan-out (`gather` + `Semaphore` + per-provider `timeout`, graceful degradation), **Redis** offer-cache + idempotency reservation (SETNX), **circuit breaker** + retry/backoff+jitter | async, Redis, resilience |
-| **3 🔄** | **outbox** (events embedded in the order doc, atomic with the write) + **relay** → Kafka/Redpanda; 3 **idempotent consumers** (ticketing/notifications/audit) ✅ done; saga + compensation next | Kafka/streaming, distributed-systems patterns |
+| **3 ✅** | **outbox** (embedded in the order doc, atomic with the write) + **relay** → Kafka/Redpanda; 3 **idempotent consumers** (ticketing/notifications/audit); **booking saga** (reserve→pay→ticket) with compensation | Kafka/streaming, distributed-systems patterns |
 | **4** | Sentry (PII-scrubbed), Prometheus/Grafana (latency, error rate, consumer lag), correlation IDs in structured logs, GitHub Actions + testcontainers | observability, CI/CD |
 
 ## How AI assistants were used
