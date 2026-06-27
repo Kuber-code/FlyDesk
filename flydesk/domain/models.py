@@ -242,6 +242,23 @@ class OrderEvent(BaseModel):
     detail: str | None = None
 
 
+class OutboxEvent(BaseModel):
+    """A domain event staged for reliable publish (transactional outbox, Q30).
+
+    Stored *inside* the order document, so it's written in the same atomic
+    single-document write as the state change — the DB write and the "event
+    exists" fact can't diverge. A relay later publishes it and stamps
+    `published_at`."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str
+    type: str
+    payload: dict
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    published_at: datetime | None = None
+
+
 class Order(BaseModel):
     """Persisted booking document (stored in MongoDB, read as one document)."""
 
@@ -258,3 +275,4 @@ class Order(BaseModel):
     idempotency_key: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     events: list[OrderEvent] = Field(default_factory=list)
+    outbox: list[OutboxEvent] = Field(default_factory=list)

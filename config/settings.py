@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     # Local apps
     "flydesk.search",
     "flydesk.bookings",
+    "flydesk.events",
 ]
 
 MIDDLEWARE = [

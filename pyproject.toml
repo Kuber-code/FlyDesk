@@ -19,6 +19,7 @@ dependencies = [
     "pydantic-settings>=2.3",
     "pymongo>=4.7",
     "redis>=5",
+    "aiokafka>=0.10",
     "python-dotenv>=1.0",
     "gunicorn>=22.0; sys_platform != 'win32'",
 ]

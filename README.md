@@ -85,8 +85,9 @@ flydesk/
     base.py      FlightProvider port + get_provider() factory
     duffel/      schemas (raw) + mapper (ACL) + client (live, httpx)
     amadeus/     schemas (raw) + mapper (ACL) + provider (modelled stub)
-  search/        DRF app: POST /search  (view → service → provider)
-  bookings/      DRF app: POST /bookings, GET /bookings/{id} (+ Mongo repository)
+  search/        DRF app: POST /search  (async fan-out + Redis cache)
+  bookings/      DRF app: POST /bookings, GET /bookings/{id} (+ Mongo repository, outbox)
+  events/        outbox relay, Kafka publisher, idempotent consumers (Phase 3)
 config/          Django project (settings, urls, wsgi/asgi)
 tests/           unit + integration; fixtures/ holds real provider payloads
 docs/adr/        Architecture Decision Records
@@ -187,7 +188,7 @@ swaps the fakes for **testcontainers** on the integration tests.
 |---|---|---|
 | **1 ✅ (this repo)** | Django+DRF, Pydantic ACL, Mongo, Duffel live, Amadeus modelled, idempotency | Django, Mongo, Pydantic, travel domain |
 | **2 ✅** | async concurrent fan-out (`gather` + `Semaphore` + per-provider `timeout`, graceful degradation), **Redis** offer-cache + idempotency reservation (SETNX), **circuit breaker** + retry/backoff+jitter | async, Redis, resilience |
-| **3** | Kafka `BookingConfirmed` → ticketing/notifications/audit consumers, **outbox**, **saga** with compensation | Kafka/streaming, distributed-systems patterns |
+| **3 🔄** | **outbox** (events embedded in the order doc, atomic with the write) + **relay** → Kafka/Redpanda; 3 **idempotent consumers** (ticketing/notifications/audit) ✅ done; saga + compensation next | Kafka/streaming, distributed-systems patterns |
 | **4** | Sentry (PII-scrubbed), Prometheus/Grafana (latency, error rate, consumer lag), correlation IDs in structured logs, GitHub Actions + testcontainers | observability, CI/CD |
 
 ## How AI assistants were used

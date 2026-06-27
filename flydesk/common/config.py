@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
     offer_cache_ttl: int = Field(default=60, alias="OFFER_CACHE_TTL")  # seconds
 
+    # --- Kafka (event streaming: outbox relay + consumers) ---
+    kafka_bootstrap_servers: str = Field(default="localhost:9092", alias="KAFKA_BOOTSTRAP_SERVERS")
+
     # --- Duffel ---
     duffel_api_token: str = Field(default="", alias="DUFFEL_API_TOKEN")
     duffel_api_url: str = Field(default="https://api.duffel.com", alias="DUFFEL_API_URL")

@@ -41,6 +41,12 @@ class OrderRepository:
         doc = self._col.find_one({"idempotency_key": key})
         return self._to_order(doc) if doc else None
 
+    def find_with_unpublished_outbox(self, *, limit: int = 100) -> list[Order]:
+        """Orders that have at least one outbox event awaiting publish.
+        `$elemMatch` so an order with an all-published (or empty) outbox is excluded."""
+        cursor = self._col.find({"outbox": {"$elemMatch": {"published_at": None}}}).limit(limit)
+        return [self._to_order(doc) for doc in cursor]
+
     @staticmethod
     def _to_order(doc: dict) -> Order:
         doc = dict(doc)

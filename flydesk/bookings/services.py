@@ -13,13 +13,14 @@ current amount) so we never book a stale fare (interview Q40).
 """
 
 import logging
+import uuid
 
 import redis
 from pymongo.errors import DuplicateKeyError
 
 from flydesk.common import redis_client
 from flydesk.common.exceptions import BookingInProgressError, BookingNotFoundError
-from flydesk.domain import BookingPassenger, Order
+from flydesk.domain import BookingPassenger, Order, OutboxEvent
 from flydesk.providers import get_provider
 
 from .repository import OrderRepository, ensure_order_indexes
@@ -27,6 +28,21 @@ from .repository import OrderRepository, ensure_order_indexes
 logger = logging.getLogger("flydesk.bookings")
 
 RESERVATION_TTL = 120  # seconds
+
+
+def _booking_confirmed_event(order: Order) -> OutboxEvent:
+    """A BookingConfirmed event staged in the order's outbox, published later by
+    the relay (interview Q30). Consumers (ticketing/notifications/audit) react."""
+    return OutboxEvent(
+        id=uuid.uuid4().hex,
+        type="BookingConfirmed",
+        payload={
+            "order_id": order.id,
+            "booking_reference": order.booking_reference,
+            "provider": order.provider.value,
+            "total": order.total.model_dump(mode="json"),
+        },
+    )
 
 
 def _reserve(idempotency_key: str) -> bool:
@@ -70,8 +86,12 @@ def create_booking(
     provider = get_provider(provider_name)
 
     order = provider.create_order(offer_id, passengers)
+    # Stage the BookingConfirmed event in the SAME document write as the order
+    # (transactional outbox) — the relay publishes it to Kafka afterwards.
+    updates: dict = {"outbox": [_booking_confirmed_event(order)]}
     if idempotency_key:
-        order = order.model_copy(update={"idempotency_key": idempotency_key})
+        updates["idempotency_key"] = idempotency_key
+    order = order.model_copy(update=updates)
 
     try:
         repo.save(order)

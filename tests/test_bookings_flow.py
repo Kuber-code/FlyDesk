@@ -101,3 +101,20 @@ def test_held_reservation_returns_in_progress(
             repository=repo,
         )
     assert provider.create_calls == 0  # never reached the provider
+
+
+def test_booking_stages_outbox_event(load, mongo_collection, adult_passenger_payload, monkeypatch):
+    provider = FakeProvider(_order_from_fixture(load, adult_passenger_payload))
+    monkeypatch.setattr(services, "get_provider", lambda name=None: provider)
+    repo = OrderRepository(collection=mongo_collection)
+
+    order = services.create_booking(
+        offer_id="off_x",
+        passengers_data=[adult_passenger_payload],
+        repository=repo,
+    )
+
+    stored = repo.get(order.id)
+    assert len(stored.outbox) == 1
+    assert stored.outbox[0].type == "BookingConfirmed"
+    assert stored.outbox[0].published_at is None  # not yet relayed
