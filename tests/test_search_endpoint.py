@@ -1,9 +1,10 @@
-"""POST /api/v1/search end-to-end through DRF (provider faked)."""
+"""POST /api/v1/search end-to-end through DRF, fanning out over (mocked) providers."""
 
 from rest_framework.test import APIClient
 
 from flydesk.providers.duffel import mapper, schemas
-from flydesk.search import services
+from flydesk.providers.mock import MockProvider
+from flydesk.search import views
 
 
 def _offers_from_fixture(load):
@@ -13,18 +14,10 @@ def _offers_from_fixture(load):
     return sorted((mapper.map_offer(o) for o in parsed.data.offers), key=lambda o: o.total.amount)
 
 
-class _FakeProvider:
-    def __init__(self, offers):
-        self._offers = offers
-
-    def search(self, criteria):
-        return self._offers
-
-
 def test_search_returns_normalized_offers(load, monkeypatch):
-    monkeypatch.setattr(
-        services, "get_provider", lambda name=None: _FakeProvider(_offers_from_fixture(load))
-    )
+    offers = _offers_from_fixture(load)
+    monkeypatch.setattr(views, "get_async_providers", lambda: [MockProvider("duffel", offers)])
+
     client = APIClient()
     resp = client.post(
         "/api/v1/search",
@@ -34,6 +27,7 @@ def test_search_returns_normalized_offers(load, monkeypatch):
     assert resp.status_code == 200
     body = resp.json()
     assert body["count"] == 3
+    assert body["degraded_providers"] == []
     assert body["offers"][0]["total"]["amount"] == "217.02"  # cheapest first (real AA fare)
     assert body["offers"][0]["provider"] == "duffel"
 

@@ -46,3 +46,24 @@ def get_provider(name: str | None = None) -> FlightProvider:
 
         return AmadeusProvider()
     raise ValueError(f"unknown provider: {resolved!r}")
+
+
+class AsyncFlightProvider(ABC):
+    """Async port for the read-heavy **search** path (Phase 2).
+
+    Search is I/O-bound fan-out to several providers at once — the textbook case
+    for asyncio (interview Q1). Booking stays on the sync `FlightProvider` (it's a
+    single, correctness-critical write, not a fan-out)."""
+
+    name: object  # Provider enum or a free string for mocks
+
+    @abstractmethod
+    async def search(self, criteria: SearchCriteria) -> list[Offer]: ...
+
+
+def get_async_providers() -> list[AsyncFlightProvider]:
+    """The providers search fans out across. Today just async Duffel; drop in an
+    NDC/LCC feed or a second GDS here and the fan-out picks it up automatically."""
+    from flydesk.providers.duffel.async_client import AsyncDuffelProvider
+
+    return [AsyncDuffelProvider()]

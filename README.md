@@ -1,5 +1,7 @@
 # FlyDesk ✈️
 
+[![CI](https://github.com/Kuber-code/FlyDesk/actions/workflows/ci.yml/badge.svg)](https://github.com/Kuber-code/FlyDesk/actions/workflows/ci.yml)
+
 **A provider-agnostic flight search & booking backend for corporate travel.**
 
 Search flights across multiple providers, normalize the messy responses into one
@@ -184,7 +186,7 @@ swaps the fakes for **testcontainers** on the integration tests.
 | Phase | Adds | Closes (from the role) |
 |---|---|---|
 | **1 ✅ (this repo)** | Django+DRF, Pydantic ACL, Mongo, Duffel live, Amadeus modelled, idempotency | Django, Mongo, Pydantic, travel domain |
-| **2** | async Search service (asyncio + httpx/aiohttp, semaphores, timeouts), Redis (offer cache TTL, idempotency reservation, rate-limit), retries + circuit breaker | async, Redis, resilience |
+| **2 🔄** | async concurrent fan-out (`asyncio.gather` + `Semaphore` + per-provider `asyncio.timeout`) with **graceful degradation** ✅ done; Redis (offer-cache TTL, idempotency reservation, rate-limit) + circuit breaker next | async, Redis, resilience |
 | **3** | Kafka `BookingConfirmed` → ticketing/notifications/audit consumers, **outbox**, **saga** with compensation | Kafka/streaming, distributed-systems patterns |
 | **4** | Sentry (PII-scrubbed), Prometheus/Grafana (latency, error rate, consumer lag), correlation IDs in structured logs, GitHub Actions + testcontainers | observability, CI/CD |
 
