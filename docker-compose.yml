@@ -15,6 +15,17 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   web:
     build: .
     restart: unless-stopped
@@ -26,12 +37,15 @@ services:
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,web
       MONGO_URI: mongodb://mongo:27017
       MONGO_DB: ${MONGO_DB:-flydesk}
+      REDIS_URL: redis://redis:6379/0
       DUFFEL_API_TOKEN: ${DUFFEL_API_TOKEN:-}
       DUFFEL_API_URL: ${DUFFEL_API_URL:-https://api.duffel.com}
       DUFFEL_API_VERSION: ${DUFFEL_API_VERSION:-v2}
       FLYDESK_PROVIDER: ${FLYDESK_PROVIDER:-duffel}
     depends_on:
       mongo:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
 volumes:

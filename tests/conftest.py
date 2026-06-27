@@ -48,3 +48,24 @@ def adult_passenger_payload():
         "email": "tony@starkindustries.com",
         "phone_number": "+442080160508",
     }
+
+
+@pytest.fixture(autouse=True)
+def fake_redis(monkeypatch):
+    """Every test gets an in-memory Redis; nothing touches a real server."""
+    import fakeredis
+
+    from flydesk.common import redis_client
+
+    fake = fakeredis.FakeRedis(decode_responses=True)
+    monkeypatch.setattr(redis_client, "get_redis", lambda: fake)
+    return fake
+
+
+@pytest.fixture(autouse=True)
+def _reset_breakers():
+    from flydesk.common.resilience import reset_breakers
+
+    reset_breakers()
+    yield
+    reset_breakers()

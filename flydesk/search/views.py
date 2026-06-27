@@ -6,12 +6,10 @@ The view stays a normal sync DRF view and drives the async fan-out via
 refinement; the orchestration is already async and provider-agnostic.
 """
 
-from asgiref.sync import async_to_sync
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from flydesk.providers.base import get_async_providers
-from flydesk.search.async_service import search_all
+from flydesk.search.cache import cached_search
 from flydesk.search.serializers import SearchRequestSerializer
 from flydesk.search.services import build_criteria
 
@@ -22,11 +20,12 @@ class SearchView(APIView):
         serializer.is_valid(raise_exception=True)
         criteria = build_criteria(serializer.validated_data)  # raises -> 400 on bad domain input
 
-        offers, degraded = async_to_sync(search_all)(criteria, get_async_providers())
+        offers, degraded, cached = cached_search(criteria)
 
         return Response(
             {
                 "count": len(offers),
+                "cached": cached,
                 "degraded_providers": degraded,
                 "offers": [o.model_dump(mode="json") for o in offers],
             }

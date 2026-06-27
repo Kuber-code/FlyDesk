@@ -4,7 +4,7 @@ from rest_framework.test import APIClient
 
 from flydesk.providers.duffel import mapper, schemas
 from flydesk.providers.mock import MockProvider
-from flydesk.search import views
+from flydesk.search import cache
 
 
 def _offers_from_fixture(load):
@@ -16,7 +16,7 @@ def _offers_from_fixture(load):
 
 def test_search_returns_normalized_offers(load, monkeypatch):
     offers = _offers_from_fixture(load)
-    monkeypatch.setattr(views, "get_async_providers", lambda: [MockProvider("duffel", offers)])
+    monkeypatch.setattr(cache, "get_async_providers", lambda: [MockProvider("duffel", offers)])
 
     client = APIClient()
     resp = client.post(
@@ -27,6 +27,7 @@ def test_search_returns_normalized_offers(load, monkeypatch):
     assert resp.status_code == 200
     body = resp.json()
     assert body["count"] == 3
+    assert body["cached"] is False
     assert body["degraded_providers"] == []
     assert body["offers"][0]["total"]["amount"] == "217.02"  # cheapest first (real AA fare)
     assert body["offers"][0]["provider"] == "duffel"

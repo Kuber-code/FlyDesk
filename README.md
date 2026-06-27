@@ -186,7 +186,7 @@ swaps the fakes for **testcontainers** on the integration tests.
 | Phase | Adds | Closes (from the role) |
 |---|---|---|
 | **1 ✅ (this repo)** | Django+DRF, Pydantic ACL, Mongo, Duffel live, Amadeus modelled, idempotency | Django, Mongo, Pydantic, travel domain |
-| **2 🔄** | async concurrent fan-out (`asyncio.gather` + `Semaphore` + per-provider `asyncio.timeout`) with **graceful degradation** ✅ done; Redis (offer-cache TTL, idempotency reservation, rate-limit) + circuit breaker next | async, Redis, resilience |
+| **2 ✅** | async concurrent fan-out (`gather` + `Semaphore` + per-provider `timeout`, graceful degradation), **Redis** offer-cache + idempotency reservation (SETNX), **circuit breaker** + retry/backoff+jitter | async, Redis, resilience |
 | **3** | Kafka `BookingConfirmed` → ticketing/notifications/audit consumers, **outbox**, **saga** with compensation | Kafka/streaming, distributed-systems patterns |
 | **4** | Sentry (PII-scrubbed), Prometheus/Grafana (latency, error rate, consumer lag), correlation IDs in structured logs, GitHub Actions + testcontainers | observability, CI/CD |
 

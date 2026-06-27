@@ -77,3 +77,27 @@ def test_get_unknown_booking_raises(mongo_collection):
     repo = OrderRepository(collection=mongo_collection)
     with pytest.raises(BookingNotFoundError):
         services.get_booking("ord_does_not_exist", repository=repo)
+
+
+def test_held_reservation_returns_in_progress(
+    load, mongo_collection, adult_passenger_payload, monkeypatch, fake_redis
+):
+    import pytest
+
+    from flydesk.common.exceptions import BookingInProgressError
+
+    provider = FakeProvider(_order_from_fixture(load, adult_passenger_payload))
+    monkeypatch.setattr(services, "get_provider", lambda name=None: provider)
+    repo = OrderRepository(collection=mongo_collection)
+
+    # Another request already reserved the key (and hasn't persisted yet).
+    fake_redis.set("idem:busy-key", "1")
+
+    with pytest.raises(BookingInProgressError):
+        services.create_booking(
+            offer_id="off_x",
+            passengers_data=[adult_passenger_payload],
+            idempotency_key="busy-key",
+            repository=repo,
+        )
+    assert provider.create_calls == 0  # never reached the provider

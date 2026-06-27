@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     mongo_uri: str = Field(default="mongodb://localhost:27017", alias="MONGO_URI")
     mongo_db: str = Field(default="flydesk", alias="MONGO_DB")
 
+    # --- Redis (offer cache, idempotency reservation) ---
+    redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
+    offer_cache_ttl: int = Field(default=60, alias="OFFER_CACHE_TTL")  # seconds
+
     # --- Duffel ---
     duffel_api_token: str = Field(default="", alias="DUFFEL_API_TOKEN")
     duffel_api_url: str = Field(default="https://api.duffel.com", alias="DUFFEL_API_URL")

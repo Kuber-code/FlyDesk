@@ -62,6 +62,13 @@ class BookingNotFoundError(FlyDeskError):
     code = "booking_not_found"
 
 
+class BookingInProgressError(FlyDeskError):
+    """A booking with this idempotency key is already being processed."""
+
+    status_code = 409
+    code = "booking_in_progress"
+
+
 def drf_exception_handler(exc, context):
     """Map domain + Pydantic errors to clean JSON; defer everything else to DRF."""
     if isinstance(exc, FlyDeskError):

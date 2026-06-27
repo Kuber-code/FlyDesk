@@ -18,6 +18,7 @@ dependencies = [
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
     "pymongo>=4.7",
+    "redis>=5",
     "python-dotenv>=1.0",
     "gunicorn>=22.0; sys_platform != 'win32'",
 ]
@@ -29,6 +30,7 @@ dev = [
     "pytest-asyncio>=0.23",
     "respx>=0.21",
     "mongomock>=4.1",
+    "fakeredis>=2.23",
     "ruff>=0.5",
     "black>=24.4",
 ]

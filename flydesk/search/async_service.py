@@ -15,6 +15,8 @@ Total latency is ~the slowest *healthy* provider, not the sum.
 import asyncio
 import logging
 
+from flydesk.common.exceptions import ProviderError
+from flydesk.common.resilience import get_breaker, retry_async
 from flydesk.domain import Offer, SearchCriteria
 from flydesk.providers.base import AsyncFlightProvider
 
@@ -32,9 +34,18 @@ async def search_all(
     semaphore = asyncio.Semaphore(max_concurrency)
 
     async def _search_one(provider: AsyncFlightProvider) -> list[Offer]:
-        async with semaphore:
+        breaker = get_breaker(str(provider.name))
+
+        async def _attempt() -> list[Offer]:
             async with asyncio.timeout(per_provider_timeout):
                 return await provider.search(criteria)
+
+        async with semaphore:
+            # breaker(retry(timeout(call))): retry transient blips, trip the
+            # breaker only on persistent failure so we fail fast next time.
+            return await breaker.call(
+                retry_async, _attempt, attempts=2, retry_on=(ProviderError, TimeoutError)
+            )
 
     results = await asyncio.gather(*(_search_one(p) for p in providers), return_exceptions=True)
 
