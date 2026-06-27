@@ -18,7 +18,7 @@ import uuid
 import redis
 from pymongo.errors import DuplicateKeyError
 
-from flydesk.common import redis_client
+from flydesk.common import metrics, redis_client
 from flydesk.common.exceptions import BookingInProgressError, BookingNotFoundError
 from flydesk.domain import BookingPassenger, Order, OutboxEvent
 from flydesk.providers import get_provider
@@ -102,6 +102,7 @@ def create_booking(
             return winner
         raise
 
+    metrics.BOOKINGS.inc()
     logger.info("booking_created order=%s pnr=%s", order.id, order.booking_reference)
     return order
 

@@ -17,6 +17,7 @@ from datetime import UTC, datetime
 from pymongo.collection import Collection
 
 from flydesk.bookings.repository import OrderRepository
+from flydesk.common import metrics
 from flydesk.domain import OrderEvent
 from flydesk.domain.enums import OrderStatus
 from flydesk.events.dedupe import ProcessedEvents
@@ -56,6 +57,7 @@ async def handle_ticketing(
             }
         )
         repository.save(order)
+        metrics.TICKETS_ISSUED.inc()
 
     await publisher.publish(
         TICKETS_ISSUED,

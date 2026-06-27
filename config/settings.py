@@ -44,14 +44,15 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Observability first so it wraps everything below (correlation id + metrics).
+    "flydesk.common.middleware.CorrelationIdMiddleware",
+    "flydesk.common.middleware.MetricsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # Correlation ID for cross-service tracing (Phase 4 expands this).
-    "flydesk.common.middleware.CorrelationIdMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -113,11 +114,19 @@ REST_FRAMEWORK = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "filters": {
+        "correlation": {"()": "flydesk.common.logging.CorrelationIdFilter"},
+    },
     "formatters": {
-        "simple": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"},
+        "simple": {"format": "%(asctime)s %(levelname)s %(name)s [%(correlation_id)s] %(message)s"},
+        "json": {"()": "flydesk.common.logging.JsonFormatter"},
     },
     "handlers": {
-        "console": {"class": "logging.StreamHandler", "formatter": "simple"},
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json" if app_settings.log_json else "simple",
+            "filters": ["correlation"],
+        },
     },
     "root": {"handlers": ["console"], "level": "INFO"},
     "loggers": {
@@ -128,3 +137,8 @@ LOGGING = {
         },
     },
 }
+
+# --- Sentry (errors, PII-scrubbed). No-op unless SENTRY_DSN is set. ---
+from flydesk.common.observability import init_sentry  # noqa: E402
+
+init_sentry(app_settings.sentry_dsn, app_settings.environment)

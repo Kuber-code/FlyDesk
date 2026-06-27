@@ -20,6 +20,8 @@ dependencies = [
     "pymongo>=4.7",
     "redis>=5",
     "aiokafka>=0.10",
+    "prometheus-client>=0.20",
+    "sentry-sdk>=2.0",
     "python-dotenv>=1.0",
     "gunicorn>=22.0; sys_platform != 'win32'",
 ]

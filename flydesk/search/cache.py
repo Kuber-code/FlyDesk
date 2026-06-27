@@ -16,7 +16,7 @@ import logging
 import redis
 from asgiref.sync import async_to_sync
 
-from flydesk.common import redis_client
+from flydesk.common import metrics, redis_client
 from flydesk.common.config import get_settings
 from flydesk.domain import Offer, SearchCriteria
 from flydesk.providers.base import get_async_providers
@@ -42,9 +42,13 @@ def cached_search(criteria: SearchCriteria) -> tuple[list[Offer], list[str], boo
 
     if hit:
         offers = [Offer.model_validate(o) for o in json.loads(hit)]
+        metrics.SEARCHES.labels(cached="true").inc()
         return offers, [], True
 
     offers, degraded = async_to_sync(search_all)(criteria, get_async_providers())
+    metrics.SEARCHES.labels(cached="false").inc()
+    for provider_name in degraded:
+        metrics.PROVIDER_DEGRADED.labels(provider=provider_name).inc()
 
     if not degraded:
         try:

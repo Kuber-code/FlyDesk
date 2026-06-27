@@ -1,8 +1,9 @@
 """Root URL configuration for FlyDesk."""
 
 from django.contrib import admin
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.urls import include, path
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 
 def healthz(_request):
@@ -10,9 +11,15 @@ def healthz(_request):
     return JsonResponse({"status": "ok"})
 
 
+def metrics(_request):
+    """Prometheus scrape endpoint."""
+    return HttpResponse(generate_latest(), content_type=CONTENT_TYPE_LATEST)
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("healthz", healthz, name="healthz"),
+    path("metrics", metrics, name="metrics"),
     path("api/v1/", include("flydesk.search.urls")),
     path("api/v1/", include("flydesk.bookings.urls")),
 ]

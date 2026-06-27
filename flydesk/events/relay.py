@@ -11,6 +11,7 @@ import logging
 from datetime import UTC, datetime
 
 from flydesk.bookings.repository import OrderRepository
+from flydesk.common import metrics
 from flydesk.events.publisher import EventPublisher
 from flydesk.events.topics import topic_for
 
@@ -35,6 +36,7 @@ async def relay_once(
                 value={"id": event.id, "type": event.type, "payload": event.payload},
             )
             event.published_at = datetime.now(UTC)
+            metrics.OUTBOX_PUBLISHED.inc()
             changed = True
             published += 1
         if changed:

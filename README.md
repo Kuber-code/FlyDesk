@@ -105,8 +105,11 @@ docs/DEPLOYMENT.md   how to run, ship, and deploy (+ the phased build plan)
 ### Option A — Docker (everything)
 ```bash
 cp .env.example .env        # put your duffel_test_ token in DUFFEL_API_TOKEN
-docker compose up --build   # Mongo + Django on http://localhost:8000
+docker compose up --build   # full stack
 ```
+Brings up: API on `:8000`, **Grafana** `:3000` (anonymous, FlyDesk dashboard),
+**Prometheus** `:9090`, Mongo, Redis, Redpanda (Kafka), plus the `relay` and
+`worker` (outbox relay + consumers). App metrics at `:8000/metrics`.
 
 ### Option B — local venv
 ```bash
@@ -189,7 +192,7 @@ swaps the fakes for **testcontainers** on the integration tests.
 | **1 ✅ (this repo)** | Django+DRF, Pydantic ACL, Mongo, Duffel live, Amadeus modelled, idempotency | Django, Mongo, Pydantic, travel domain |
 | **2 ✅** | async concurrent fan-out (`gather` + `Semaphore` + per-provider `timeout`, graceful degradation), **Redis** offer-cache + idempotency reservation (SETNX), **circuit breaker** + retry/backoff+jitter | async, Redis, resilience |
 | **3 ✅** | **outbox** (embedded in the order doc, atomic with the write) + **relay** → Kafka/Redpanda; 3 **idempotent consumers** (ticketing/notifications/audit); **booking saga** (reserve→pay→ticket) with compensation | Kafka/streaming, distributed-systems patterns |
-| **4** | Sentry (PII-scrubbed), Prometheus/Grafana (latency, error rate, consumer lag), correlation IDs in structured logs, GitHub Actions + testcontainers | observability, CI/CD |
+| **4 ✅** | **Prometheus** `/metrics` (HTTP + domain counters) + **Grafana** dashboard, **structured JSON logs** with correlation IDs, **Sentry** (PII-scrubbed); GitHub Actions CI green since Phase 1 | observability, CI/CD |
 
 ## How AI assistants were used
 

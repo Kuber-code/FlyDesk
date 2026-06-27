@@ -18,6 +18,9 @@ x-app-env: &app-env
   DUFFEL_API_URL: ${DUFFEL_API_URL:-https://api.duffel.com}
   DUFFEL_API_VERSION: ${DUFFEL_API_VERSION:-v2}
   FLYDESK_PROVIDER: ${FLYDESK_PROVIDER:-duffel}
+  FLYDESK_ENV: ${FLYDESK_ENV:-docker}
+  LOG_JSON: ${LOG_JSON:-true}
+  SENTRY_DSN: ${SENTRY_DSN:-}
 
 services:
   mongo:
@@ -102,5 +105,31 @@ services:
       redpanda:
         condition: service_healthy
 
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - web
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
 volumes:
   mongo_data:
+  grafana_data:

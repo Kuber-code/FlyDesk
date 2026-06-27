@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     # --- Kafka (event streaming: outbox relay + consumers) ---
     kafka_bootstrap_servers: str = Field(default="localhost:9092", alias="KAFKA_BOOTSTRAP_SERVERS")
 
+    # --- Observability ---
+    environment: str = Field(default="development", alias="FLYDESK_ENV")
+    log_json: bool = Field(default=False, alias="LOG_JSON")  # JSON logs in prod
+    sentry_dsn: str = Field(default="", alias="SENTRY_DSN")  # empty -> Sentry off
+
     # --- Duffel ---
     duffel_api_token: str = Field(default="", alias="DUFFEL_API_TOKEN")
     duffel_api_url: str = Field(default="https://api.duffel.com", alias="DUFFEL_API_URL")
