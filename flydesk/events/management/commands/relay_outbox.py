@@ -23,6 +23,9 @@ class Command(BaseCommand):
         asyncio.run(self._run(options["interval"], options["once"]))
 
     async def _run(self, interval: float, once: bool):
+        from prometheus_client import start_http_server
+
+        start_http_server(8001)  # Prometheus scrapes this process's metrics here
         publisher = KafkaEventPublisher(get_settings().kafka_bootstrap_servers)
         await publisher.start()
         self.stdout.write("outbox relay started")

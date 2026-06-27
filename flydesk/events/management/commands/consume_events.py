@@ -28,7 +28,9 @@ class Command(BaseCommand):
 
     async def _run(self):
         from aiokafka import AIOKafkaConsumer
+        from prometheus_client import start_http_server
 
+        start_http_server(8001)  # Prometheus scrapes this process's metrics here
         settings = get_settings()
         consumer = AIOKafkaConsumer(
             BOOKINGS_CONFIRMED,

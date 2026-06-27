@@ -75,6 +75,7 @@ services:
       - "8000:8000"
     environment:
       <<: *app-env
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prom  # aggregate the gunicorn workers' metrics
     depends_on:
       mongo:
         condition: service_healthy
