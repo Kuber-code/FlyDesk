@@ -34,6 +34,7 @@ dev = [
     "respx>=0.21",
     "mongomock>=4.1",
     "fakeredis>=2.23",
+    "testcontainers[mongodb]>=4.0",
     "ruff>=0.5",
     "black>=24.4",
 ]
@@ -57,5 +58,10 @@ target-version = ["py312"]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
 testpaths = ["tests"]
-addopts = "-q"
+# The default run stays hermetic (respx/mongomock/fakeredis). Integration tests
+# need Docker (testcontainers) and are opt-in: `pytest -m integration`.
+addopts = "-q -m 'not integration'"
 asyncio_mode = "auto"
+markers = [
+    "integration: needs Docker (testcontainers); excluded from the default run",
+]

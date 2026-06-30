@@ -79,6 +79,25 @@
           "legendFormat": "{{provider}}"
         }
       ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Kafka consumer lag (messages behind)",
+      "description": "How many messages each consumer group is behind the log head. Read straight from Redpanda's /public_metrics; a healthy stream sits near 0, a stuck or slow consumer climbs.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10 } }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (redpanda_group, redpanda_topic) (redpanda_kafka_consumer_group_lag_sum)",
+          "legendFormat": "{{redpanda_group}} / {{redpanda_topic}}"
+        }
+      ]
     }
   ]
 }

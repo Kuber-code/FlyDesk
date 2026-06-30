@@ -183,6 +183,34 @@ why the anti-corruption layer exists. Reference solutions:
 pytest tests/test_duffel_mapper.py tests/test_amadeus_mapper.py -v
 ```
 
+## Resilience
+
+Search fans out to every provider concurrently and is built to **degrade, not
+fail**: one slow or broken provider never sinks the whole response.
+
+- **Concurrent fan-out with isolation** — `asyncio.gather` over the providers, each
+  under its own `asyncio.timeout` and a `Semaphore` bound. A provider that times out
+  or raises is dropped from the result and reported in a `degraded` list; the
+  healthy providers' offers still come back, merged and sorted cheapest-first.
+- **Circuit breaker** — repeated failures to a provider trip the breaker `open`, so
+  subsequent calls **fail fast** instead of piling onto a struggling dependency;
+  after a cooldown it goes `half_open` and closes again on the next success.
+- **Retry with backoff + jitter** around transient errors (timeouts), giving up
+  after a bounded number of attempts rather than hanging.
+
+It's proven by tests, not just asserted:
+
+| Behaviour | Test |
+|---|---|
+| Slow provider times out, the rest still return | [`test_async_search.py`](tests/test_async_search.py) `test_slow_provider_times_out_others_still_return` |
+| Failing provider degrades gracefully (`degraded == ["broken"]`) | [`test_async_search.py`](tests/test_async_search.py) `test_failing_provider_degrades_gracefully` |
+| Breaker opens after threshold, then fails fast | [`test_resilience.py`](tests/test_resilience.py) `test_breaker_opens_after_threshold_then_fails_fast` |
+| Breaker half-opens after cooldown and closes on success | [`test_resilience.py`](tests/test_resilience.py) `test_breaker_half_opens_and_closes_on_success` |
+| Retry succeeds after transient failures / gives up | [`test_resilience.py`](tests/test_resilience.py) `test_retry_*` |
+
+Degradations are also a Prometheus counter (`flydesk_provider_degraded_total`) with
+a Grafana panel, so a flaky provider shows up on the dashboard, not just in logs.
+
 ## Design decisions (with trade-offs)
 
 Short ADRs in [`docs/adr/`](docs/adr/):
@@ -196,13 +224,19 @@ Short ADRs in [`docs/adr/`](docs/adr/):
 
 ## Testing
 ```bash
-pytest                 # 47 tests: domain, both mappers, provider, async search, resilience, cache, booking saga, outbox/consumers, observability
+pytest                 # 47 hermetic tests: domain, both mappers, provider, async search, resilience, cache, booking saga, outbox/consumers, observability
 ruff check . && black --check .
 python manage.py check
+
+pytest -m integration  # opt-in: real MongoDB via testcontainers (needs Docker)
 ```
 External HTTP is mocked at the transport boundary with **respx**; MongoDB is faked
-with **mongomock**, so the whole suite runs offline in under a second. Phase 4
-swaps the fakes for **testcontainers** on the integration tests.
+with **mongomock** and Redis with **fakeredis**, so the default suite runs offline
+in under a second. On top of that, an opt-in **testcontainers** layer
+([`tests/test_integration_mongo.py`](tests/test_integration_mongo.py)) runs the
+repository against a real `mongod` — proving the unique-index idempotency guard
+actually rejects a duplicate (something mongomock can't enforce). It's excluded
+from the default run and gets its own CI job.
 
 ## Roadmap
 

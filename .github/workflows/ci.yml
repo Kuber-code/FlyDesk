@@ -28,5 +28,21 @@ jobs:
       - name: Django system check
         run: python manage.py check
 
-      - name: Tests
+      - name: Tests (hermetic)
         run: pytest -q
+
+  integration:
+    runs-on: ubuntu-latest   # GitHub runners ship a working Docker daemon
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Integration tests (testcontainers → real MongoDB)
+        run: pytest -m integration -q
