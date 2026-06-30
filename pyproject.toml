@@ -65,3 +65,9 @@ asyncio_mode = "auto"
 markers = [
     "integration: needs Docker (testcontainers); excluded from the default run",
 ]
+filterwarnings = [
+    # testcontainers 4.x still calls its own deprecated wait_for_logs internally
+    # (fired from container.start(), not our code). Scope the ignore to that one
+    # message so genuine deprecations elsewhere still surface.
+    "ignore:The wait_for_logs function with string or callable predicates is deprecated:DeprecationWarning",
+]
