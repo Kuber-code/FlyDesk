@@ -10,9 +10,10 @@ clean model, and book against a sandbox with idempotency and a clear
 modern async-capable Python microservice stack: **Django + DRF, Pydantic v2,
 MongoDB, httpx**, with **Duffel** wired live and **Amadeus** modelled.
 
-> This is **Phase 1** — deliberately synchronous and complete on its own. The
-> repo is structured so Phases 2–4 (async + Redis + resilience, Kafka + saga +
-> outbox, observability + CI/CD) slot in without a rewrite. See the [roadmap](#roadmap).
+> All four phases are built: a synchronous Phase 1 core, plus async + Redis +
+> resilience (Phase 2), Kafka + saga + outbox (Phase 3), and observability + CI/CD
+> (Phase 4). Each phase layered onto the same seams without a rewrite. See the
+> [roadmap](#roadmap).
 
 ---
 
@@ -25,7 +26,7 @@ live integration targets **Duffel's** sandbox while the **Amadeus domain is mode
 behind the same interface. That "provider-agnostic, but I understand the GDS domain"
 posture is the whole point.
 
-## Architecture (Phase 1)
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -37,13 +38,18 @@ flowchart LR
         svc --> repo[(OrderRepository)]
     end
 
-    port -->|httpx, sync| duffel[DuffelProvider]
+    port -->|"httpx async<br/>gather + Semaphore"| duffel[DuffelProvider]
     port -.modelled.-> amadeus[AmadeusProvider]
     duffel -->|raw JSON| acl[Pydantic schemas<br/>+ mapper = ACL]
     acl --> domain[Normalized<br/>domain model]
 
+    svc <-->|cache + idem keys| redis[(Redis)]
     duffel <-->|REST| duffelapi[(Duffel API<br/>sandbox)]
-    repo <-->|pymongo| mongo[(MongoDB<br/>orders)]
+    repo <-->|pymongo| mongo[(MongoDB<br/>orders + outbox)]
+
+    mongo -.outbox.-> relay[relay_outbox] -->|publish| kafka[(Kafka /<br/>Redpanda)]
+    kafka --> consumers[consume_events<br/>ticketing · notify · audit]
+    api -.->|/metrics| prom[(Prometheus<br/>+ Grafana)]
 
     style acl fill:#eef,stroke:#88a
     style domain fill:#efe,stroke:#8a8
@@ -51,25 +57,35 @@ flowchart LR
 ```
 
 - **DRF views** validate the HTTP shape and stay thin.
-- **Service layer** holds the use-cases (`search_offers`, `create_booking`).
+- **Service layer** holds the use-cases (`search_offers`, `create_booking`), now
+  with an **async concurrent fan-out** (`gather` + `Semaphore` + per-provider
+  `timeout`), a **circuit breaker**, and **Redis** (offer cache + idempotency-key
+  reservation).
 - **`FlightProvider` port** decouples the app from any specific GDS.
 - **Pydantic ACL** (anti-corruption layer) parses raw provider payloads and maps
   them to one normalized domain model.
-- **`OrderRepository`** persists orders to MongoDB as embedded documents.
+- **`OrderRepository`** persists orders to MongoDB as embedded documents, with a
+  **transactional outbox** embedded in the order; `relay_outbox` publishes to
+  **Kafka/Redpanda** and `consume_events` runs the idempotent
+  ticketing/notifications/audit consumers (plus the booking **saga**).
+- **Observability**: Prometheus `/metrics` + a Grafana dashboard, structured JSON
+  logs with correlation IDs, PII-scrubbed Sentry.
 
-The **target architecture** (all phases) adds a separate async Search service,
-Redis, Kafka with consumers (ticketing/notifications/audit), and observability —
-this single design touches every technology in the role.
+This single design touches every technology in the role — Django, Mongo, Pydantic,
+async, Redis, Kafka/streaming, and observability.
 
 ## Tech stack
 
 | Concern | Choice | Notes |
 |---|---|---|
-| Web framework / API | **Django 5 + DRF** | routing, validation, admin; async views land in Phase 2 |
+| Web framework / API | **Django 5 + DRF** | routing, validation, admin; async search path |
 | Validation / domain | **Pydantic v2** + pydantic-settings | anti-corruption layer + typed config |
-| HTTP client | **httpx** (sync) | one reused client; async in Phase 2 |
+| HTTP client | **httpx** | one reused client; async concurrent fan-out in search |
 | Datastore (domain) | **MongoDB** via pymongo | orders as embedded documents, repository pattern |
 | Datastore (Django) | SQLite | auth/sessions/admin only |
+| Cache / coordination | **Redis** | offer cache (TTL) + idempotency-key reservation (SETNX) |
+| Streaming | **Kafka** (Redpanda) | transactional outbox → relay → idempotent consumers |
+| Observability | **Prometheus + Grafana**, Sentry | `/metrics`, dashboard, JSON logs + correlation IDs, PII-scrubbed errors |
 | Live provider | **Duffel** sandbox | `duffel_test_` token |
 | Modelled provider | **Amadeus** | schemas + mapper, no live calls |
 | Tests | pytest, respx, mongomock | mock at the transport boundary |
@@ -174,10 +190,13 @@ Short ADRs in [`docs/adr/`](docs/adr/):
 2. [Pydantic anti-corruption layer](docs/adr/0002-pydantic-anti-corruption-layer.md) — tame messy GDS payloads at the edge.
 3. [MongoDB via a repository](docs/adr/0003-mongodb-via-repository.md) — Django for HTTP, Mongo for documents, no ORM bridge.
 4. [Idempotent bookings](docs/adr/0004-idempotent-bookings.md) — never double-book a non-idempotent write.
+5. [Outbox & idempotent consumers](docs/adr/0005-outbox-and-idempotent-consumers.md) — atomic outbox + relay, duplicate events as no-ops.
+6. [Booking saga](docs/adr/0006-booking-saga.md) — reserve → pay → ticket with compensation on failure.
+7. [Observability](docs/adr/0007-observability.md) — Prometheus/Grafana, JSON logs + correlation IDs, PII-scrubbed Sentry.
 
 ## Testing
 ```bash
-pytest                 # 23 tests: domain, both mappers, provider (respx), booking flow, endpoint
+pytest                 # 47 tests: domain, both mappers, provider, async search, resilience, cache, booking saga, outbox/consumers, observability
 ruff check . && black --check .
 python manage.py check
 ```

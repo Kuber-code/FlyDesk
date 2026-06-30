@@ -1,18 +1,19 @@
 # Deployment & rollout plan
 
-Two things live here: **how to ship Phase 1** (run it, publish it, deploy it) and
-**how to roll out Phases 2–4** over time. Pick the depth you need.
+Two things live here: **how to run, publish, and deploy the stack** and a record of
+**how Phases 1–4 rolled out** (all now ✅ done). Pick the depth you need.
 
 ---
 
 ## TL;DR
 
-1. Run locally with `docker compose up --build` (Mongo + app).
+1. Run the **whole stack** locally with `docker compose up --build` (API + Mongo +
+   Redis + Redpanda + relay + worker + Prometheus + Grafana).
 2. `git init` → push to a **public** GitHub repo. CI (`.github/workflows/ci.yml`)
    runs ruff + black + tests on every push.
-3. Deploy the container to **Coolify** (recommended — you self-host it), pointed at
-   the GitHub repo, with a MongoDB resource and env vars. HTTPS is automatic.
-4. Build Phases 2–4 in order; each ends at a demo-able checkpoint.
+3. Deploy to **Coolify** (recommended — you self-host it), pointed at the GitHub
+   repo, with MongoDB + Redis + Kafka resources and env vars. HTTPS is automatic.
+4. Phases 1–4 are all done; the seams described in the rollout plan are now built.
 
 ---
 
@@ -20,11 +21,16 @@ Two things live here: **how to ship Phase 1** (run it, publish it, deploy it) an
 
 ```bash
 cp .env.example .env          # set DUFFEL_API_TOKEN=duffel_test_…
-docker compose up --build     # http://localhost:8000  (Mongo + Django)
+docker compose up --build     # http://localhost:8000  (full stack)
 ```
-Or the venv path in the [README](../README.md#option-b--local-venv). Smoke test:
+This brings up the API on `:8000`, **Grafana** `:3000` (anonymous, FlyDesk
+dashboard), **Prometheus** `:9090`, Mongo, Redis, Redpanda (Kafka API), plus the
+`relay` (outbox → Kafka) and `worker` (idempotent consumers). App metrics live at
+`:8000/metrics`. Or the venv path in the
+[README](../README.md#option-b--local-venv). Smoke test:
 ```bash
 curl localhost:8000/healthz
+curl localhost:8000/metrics
 pytest -q
 ```
 
@@ -56,6 +62,13 @@ Before exposing it publicly, set via env (not code):
 - [ ] `DJANGO_ALLOWED_HOSTS=<your-domain>`
 - [ ] `DUFFEL_API_TOKEN=duffel_test_…` (keep it a **test** token in a public demo)
 - [ ] `MONGO_URI` points at a real, **non-public** MongoDB with auth
+- [ ] `REDIS_URL` points at a real Redis (offer cache + idempotency reservation)
+- [ ] `KAFKA_BOOTSTRAP_SERVERS` points at your broker (Redpanda/Kafka) for the
+      relay + consumers
+- [ ] `LOG_JSON=true` for structured logs; `SENTRY_DSN=<dsn>` to ship PII-scrubbed
+      errors
+- [ ] `PROMETHEUS_MULTIPROC_DIR=/tmp/prom` set for the web service so the gunicorn
+      workers' `/metrics` aggregate correctly
 - [ ] TLS terminated at the proxy (Coolify/Traefik does this automatically)
 - [ ] `/healthz` wired as the platform health check
 - [ ] gunicorn workers tuned (`--workers = 2×CPU+1`); the Dockerfile defaults to 3
@@ -68,20 +81,32 @@ heavier setup add WhiteNoise or serve them from the proxy.
 You already run Coolify, so it's the cheapest path and gives you Git-push deploys
 plus automatic HTTPS.
 
+The full stack is now multiple processes (web + relay + worker) plus Mongo, Redis
+and Kafka. The **simplest** path is to deploy the committed `docker-compose.yml` as
+a single *Docker Compose* resource (it already wires web/relay/worker/Mongo/Redis/
+Redpanda/Prometheus/Grafana together). If you'd rather wire resources by hand:
+
 1. **MongoDB** — in Coolify: *New Resource → Database → MongoDB*. Note its
    **internal** connection URL (e.g. `mongodb://<user>:<pass>@<service>:27017`).
-2. **App** — *New Resource → Application → from your GitHub repo*. Build pack:
-   **Dockerfile** (already in the repo). Port **8000**.
-3. **Env vars** — set the hardening list above; point `MONGO_URI` at the database
-   from step 1, `MONGO_DB=flydesk`, `FLYDESK_PROVIDER=duffel`.
-4. **Domain + health check** — assign a domain (Coolify provisions Let's Encrypt),
-   set the health check path to `/healthz`.
-5. **Deploy.** Each `git push` to `main` redeploys. The container runs
-   `migrate` then `gunicorn` (see the Dockerfile `CMD`).
+2. **Redis** — *New Resource → Database → Redis*. Note its internal URL.
+3. **Kafka/Redpanda** — add a Redpanda service (or point at an existing broker).
+4. **App (web)** — *New Resource → Application → from your GitHub repo*. Build pack:
+   **Dockerfile** (already in the repo). Port **8000**. The image's default `CMD`
+   runs `migrate` then `gunicorn`.
+5. **Relay + worker** — two more Applications from the **same image/repo**, with
+   commands `python manage.py relay_outbox` and `python manage.py consume_events`
+   respectively (no public port; they just need Mongo + Kafka).
+6. **Env vars** — set the hardening list above; point `MONGO_URI`, `REDIS_URL` and
+   `KAFKA_BOOTSTRAP_SERVERS` at the resources above, plus `MONGO_DB=flydesk`,
+   `FLYDESK_PROVIDER=duffel`.
+7. **Domain + health check** — assign a domain to *web* (Coolify provisions Let's
+   Encrypt), set the health check path to `/healthz`.
+8. **Deploy.** Each `git push` to `main` redeploys all three app services.
 
-> Alternatively deploy the whole `docker-compose.yml` as a *Docker Compose*
-> resource. If you do, remove the public `27017:27017` mapping and add a real
-> volume/credentials for Mongo — the committed compose is dev-oriented.
+> If you deploy the compose file, remove the public `27017:27017` / `6379:6379` /
+> `9092:9092` mappings and add real volumes/credentials — the committed compose is
+> dev-oriented. Prometheus + Grafana ship in it too; drop them if your platform
+> already provides monitoring.
 
 **Managed Mongo option:** MongoDB **Atlas** has a free M0 tier. Create a cluster,
 allowlist the server IP, and use its `mongodb+srv://…` string as `MONGO_URI` —
@@ -97,46 +122,52 @@ then the app needs no Mongo container at all.
 
 ---
 
-## 7. Phased rollout plan
+## 7. Phased rollout — all phases ✅ done
 
-Each phase is independently demo-able — you can stop after any one and still have
-something coherent to show. Rough effort assumes part-time evenings.
+Each phase was built to be independently demo-able. All four are now in this repo;
+the checkpoints below describe what's shipped.
 
-### Phase 1 — ✅ done (this repo)
+### Phase 1 — ✅ done
 Django+DRF, Pydantic ACL, Mongo repository, Duffel live, Amadeus modelled,
 idempotent bookings. **Checkpoint:** `search → book → fetch` works against the
-Duffel sandbox; 23 tests green in CI.
+Duffel sandbox; suite green in CI.
 
-### Phase 2 — async + Redis + resilience  (~1 week)
-- Extract **Search** into an async path: `httpx.AsyncClient`/`aiohttp`,
-  `asyncio.gather` with a **`Semaphore`**, per-request `asyncio.timeout`.
-- Fan out to 2–3 providers (Duffel + mocks with different latency); aggregate.
-- **Redis**: cache offers with TTL = offer validity; **reserve idempotency keys**
-  (SETNX) before the provider call; rate-limit outbound calls.
-- **Retry + backoff + jitter** and a **circuit breaker**; use Duffel's test routes
-  that force timeouts / no offers to prove graceful degradation.
-- **Checkpoint:** "one provider dies, the rest still return results" + a Resilience
-  section in the README with logs/tests as proof.
+### Phase 2 — ✅ async + Redis + resilience
+- **Search** runs on an async path: `httpx.AsyncClient`, `asyncio.gather` with a
+  **`Semaphore`** and a per-provider `asyncio.timeout`; one slow/dead provider is
+  skipped while the rest still return (graceful degradation).
+- **Redis**: offer cache with TTL = offer validity; **idempotency-key reservation**
+  (SETNX) before the provider call.
+- **Retry + backoff + jitter** and a **circuit breaker** around provider calls.
+- **Checkpoint:** "one provider dies, the rest still return results" —
+  see `tests/test_async_search.py`, `test_resilience.py`, `test_search_cache.py`.
 
-### Phase 3 — Kafka + saga + outbox  (~1–2 weeks)
-- On `CONFIRMED`, write an **outbox** record in the same transaction as the order;
-  a relay publishes `BookingConfirmed` to **Kafka**.
-- **Idempotent consumers** (`aiokafka`): Ticketing (`CONFIRMED → TICKETED`),
-  Notifications, Audit. A duplicate event must not issue a second ticket.
+### Phase 3 — ✅ Kafka + saga + outbox
+- On confirm, an **outbox** record is written **embedded in the order doc, atomic
+  with the write**; the `relay_outbox` management command publishes to
+  **Kafka/Redpanda**.
+- **Idempotent consumers** (`consume_events`): Ticketing (`CONFIRMED → TICKETED`),
+  Notifications, Audit. A duplicate event is a no-op (no second ticket).
 - **Saga** in booking: reserve → (mock) pay → ticket, with **compensation** on
   failure (void/refund).
-- **Checkpoint:** an event flows through 3 consumers; a replayed event is a no-op
-  (shown by a test).
+- **Checkpoint:** an event flows through 3 consumers; a replayed event is a no-op —
+  see `tests/test_outbox_relay.py`, `test_consumers.py`, `test_saga.py`.
 
-### Phase 4 — observability + CI/CD hardening  (~few days)
-- **Sentry** in every service with **PII scrubbing** (passenger names/documents).
-- **Prometheus/Grafana**: search latency, error rate, **Kafka consumer lag**;
-  **correlation IDs** (already seeded by middleware) through HTTP + Kafka headers
-  into structured JSON logs.
-- Extend `docker-compose` (Redis, Kafka, Prometheus, Grafana); add **testcontainers**
-  integration tests to CI.
-- **Checkpoint:** `docker compose up` brings the whole stack; a Grafana dashboard;
-  green pipeline.
+### Phase 4 — ✅ observability + CI/CD hardening
+- **Sentry** with **PII scrubbing** (passenger names/documents), gated on
+  `SENTRY_DSN`.
+- **Prometheus** `/metrics` (HTTP + domain counters, multiprocess-aggregated under
+  gunicorn) + a provisioned **Grafana** dashboard; **correlation IDs** seeded by
+  middleware flow through HTTP + Kafka headers into structured JSON logs
+  (`LOG_JSON=true`).
+- `docker-compose` brings up the whole stack (Redis, Redpanda, Prometheus,
+  Grafana). GitHub Actions has been green since Phase 1.
+- **Checkpoint:** `docker compose up` brings the whole stack; Grafana dashboard at
+  `:3000`; green pipeline — see `tests/test_observability.py`.
+
+> **Still open (nice-to-haves):** swap the in-suite fakes (respx/mongomock) for
+> **testcontainers** on the integration tests; wire Kafka **consumer-lag** panels
+> into Grafana.
 
 ## 8. Interview talking points this unlocks
 
@@ -148,5 +179,8 @@ Duffel sandbox; 23 tests green in CI.
   next; re-price before book so we never sell a stale fare."
 - "Django for HTTP, Mongo for documents through a repository — I don't fight an ORM
   to speak Mongo; orders embed their slices because that's how they're read."
-- "It's structured for async/Kafka/observability to slot in — the seams are already
-  there (the port, the service layer, correlation IDs, the outbox-shaped order events)."
+- "Async fan-out with graceful degradation, a circuit breaker, a transactional
+  outbox → Kafka with idempotent consumers, and a booking saga with compensation —
+  all built on the same seams (the port, the service layer, correlation IDs)."
+- "Observable end-to-end: Prometheus `/metrics`, a Grafana dashboard, structured
+  JSON logs with correlation IDs through HTTP and Kafka headers, PII-scrubbed Sentry."
