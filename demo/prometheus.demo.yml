@@ -1,0 +1,31 @@
+# Prometheus config used ONLY by the demo overlay. Same jobs as
+# monitoring/prometheus.yml plus the demo cockpit's /metrics endpoint, so the
+# Grafana "FlyDesk — Demo" dashboard can show bookings/searches counters.
+global:
+  scrape_interval: 10s
+
+scrape_configs:
+  - job_name: flydesk
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["web:8000"]
+
+  - job_name: flydesk-workers
+    static_configs:
+      - targets: ["relay:8001", "worker:8001"]
+
+  - job_name: redpanda
+    metrics_path: /public_metrics
+    static_configs:
+      - targets: ["redpanda:9644"]
+
+  # The demo cockpit — books run in this process, so its counters live here.
+  - job_name: flydesk-demo
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["demo:8500"]
+
+  # Per-container CPU/memory/network for the infra dashboard (Docker-stats exporter).
+  - job_name: demo-stats
+    static_configs:
+      - targets: ["stats-exporter:9110"]

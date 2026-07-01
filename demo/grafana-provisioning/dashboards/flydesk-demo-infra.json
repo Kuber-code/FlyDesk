@@ -1,0 +1,106 @@
+{
+  "uid": "flydesk-demo-infra",
+  "title": "FlyDesk — Infrastructure (Docker)",
+  "tags": ["flydesk", "demo", "infrastructure"],
+  "editable": true,
+  "schemaVersion": 39,
+  "time": { "from": "now-30m", "to": "now" },
+  "refresh": "10s",
+  "templating": {
+    "list": [
+      {
+        "name": "container",
+        "label": "Container",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(demo_container_up, name)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    { "type": "row", "title": "Environment", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 } },
+    {
+      "type": "stat", "title": "Containers up", "id": 1,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } } },
+      "targets": [ { "refId": "A", "expr": "sum(demo_container_up)" } ]
+    },
+    {
+      "type": "stat", "title": "Total CPU (%)", "id": 2,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "percent",
+        "thresholds": { "mode": "absolute", "steps": [
+          { "color": "green", "value": null }, { "color": "yellow", "value": 100 }, { "color": "red", "value": 300 } ] } } },
+      "targets": [ { "refId": "A", "expr": "sum(demo_container_cpu_percent)" } ]
+    },
+    {
+      "type": "stat", "title": "Total memory", "id": 3,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "targets": [ { "refId": "A", "expr": "sum(demo_container_mem_bytes)" } ]
+    },
+    {
+      "type": "stat", "title": "Restarts (total)", "id": 4,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 1 },
+      "fieldConfig": { "defaults": {
+        "thresholds": { "mode": "absolute", "steps": [
+          { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } } },
+      "targets": [ { "refId": "A", "expr": "sum(demo_container_restarts)" } ]
+    },
+
+    { "type": "row", "title": "Resources per container (USE)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 } },
+    {
+      "type": "timeseries", "title": "CPU per container (%)", "id": 5,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 7 },
+      "fieldConfig": { "defaults": { "unit": "percent" } },
+      "targets": [ { "refId": "A", "expr": "demo_container_cpu_percent{name=~\"$container\"}", "legendFormat": "{{service}}" } ]
+    },
+    {
+      "type": "timeseries", "title": "Memory usage per container", "id": 6,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 7 },
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "targets": [ { "refId": "A", "expr": "demo_container_mem_bytes{name=~\"$container\"}", "legendFormat": "{{service}}" } ]
+    },
+    {
+      "type": "timeseries", "title": "Network received (bytes/s)", "id": 7,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "Bps" } },
+      "targets": [ { "refId": "A", "expr": "demo_container_net_rx_bps{name=~\"$container\"}", "legendFormat": "{{service}}" } ]
+    },
+    {
+      "type": "timeseries", "title": "Network transmitted (bytes/s)", "id": 8,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "Bps" } },
+      "targets": [ { "refId": "A", "expr": "demo_container_net_tx_bps{name=~\"$container\"}", "legendFormat": "{{service}}" } ]
+    },
+    {
+      "type": "table", "title": "Containers — status, CPU, memory", "id": 9,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 24 },
+      "transformations": [
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": {
+          "excludeByName": { "Time": true, "job": true, "instance": true, "__name__": true, "name": true },
+          "renameByName": { "service": "Service", "Value #A": "Up", "Value #B": "CPU %", "Value #C": "Mem (bytes)" } } }
+      ],
+      "targets": [
+        { "refId": "A", "expr": "demo_container_up", "format": "table", "instant": true },
+        { "refId": "B", "expr": "demo_container_cpu_percent", "format": "table", "instant": true },
+        { "refId": "C", "expr": "demo_container_mem_bytes", "format": "table", "instant": true }
+      ]
+    }
+  ]
+}

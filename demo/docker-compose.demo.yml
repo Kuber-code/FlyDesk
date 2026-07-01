@@ -1,0 +1,104 @@
+# FlyDesk demo overlay — the full stack PLUS the interactive demo cockpit.
+#
+#   docker compose -f demo/docker-compose.demo.yml up --build
+#
+# Then open:
+#   http://localhost:8500   demo cockpit (search / book / bookings)
+#   http://localhost:3001   Grafana  -> dashboard "FlyDesk — Demo"
+#   http://localhost:9091   Prometheus
+#
+# This overlay is SELF-CONTAINED: `include` pulls the full base stack (mongo,
+# redis, redpanda, web, relay, worker, prometheus, grafana) and this file only
+# ADDS the `demo` service. You do NOT also run `docker compose up` on the base —
+# this overlay already brings everything up.
+#
+# To stay clash-proof even if a base `docker compose up` is already running, we
+# don't publish the infra host ports here and move Grafana/Prometheus to
+# :3001/:9091. Remove this file and the base stack is completely unchanged.
+include:
+  - ../docker-compose.yml
+
+services:
+  demo:
+    build:
+      context: ..
+      dockerfile: demo/Dockerfile
+    image: flydesk-demo:latest
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: ${MONGO_DB:-flydesk}
+      REDIS_URL: redis://redis:6379/0
+      DEMO_OFFER_TTL: "300"
+    ports:
+      - "8500:8500"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Infra is reached over the compose network by name, so it needs no host ports
+  # here — dropping them avoids clashing with a base stack on 27017/6379/9092/8000.
+  mongo:
+    ports: !reset []
+  redis:
+    ports: !reset []
+  redpanda:
+    ports: !reset []
+  web:
+    ports: !reset []
+
+  # Add the demo scrape target and move off :9090 to avoid a base-stack clash.
+  prometheus:
+    ports: !override
+      - "9091:9090"
+    volumes:
+      - ./prometheus.demo.yml:/etc/prometheus/prometheus.demo.yml:ro
+    command:
+      - --config.file=/etc/prometheus/prometheus.demo.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+
+  # Own the whole provisioning tree (datasources + demo dashboards) so we don't
+  # nest a file mount inside the base's read-only dir; move off :3000.
+  grafana:
+    ports: !override
+      - "3001:3000"
+    volumes: !override
+      - ./grafana-provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+
+  # --- Logs: Loki + Promtail (ships container logs over the Docker socket) --- #
+  loki:
+    image: grafana/loki:2.9.8
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+
+  # --- Infra metrics: per-container CPU/mem/net via the Docker API ----------- #
+  # (cAdvisor can't see individual containers inside Docker Desktop's VM, so we
+  # read `docker stats` ourselves — works on Docker Desktop and Linux alike.)
+  stats-exporter:
+    image: flydesk-demo:latest
+    restart: unless-stopped
+    command: ["python", "-m", "demo.stats_exporter"]
+    environment:
+      DEMO_PROJECT: demo
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - demo

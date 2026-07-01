@@ -165,9 +165,14 @@ Duffel sandbox; suite green in CI.
 - **Checkpoint:** `docker compose up` brings the whole stack; Grafana dashboard at
   `:3000`; green pipeline — see `tests/test_observability.py`.
 
-> **Still open (nice-to-haves):** swap the in-suite fakes (respx/mongomock) for
-> **testcontainers** on the integration tests; wire Kafka **consumer-lag** panels
-> into Grafana.
+> **Since shipped:** an opt-in **testcontainers** layer runs the repository
+> against a real `mongod` (`pytest -m integration`, own CI job), and a Kafka
+> **consumer-lag** panel is wired into the Grafana dashboard. There's also an
+> interactive **demo cockpit** ([`demo/`](../demo/), ADR 0008).
+>
+> **Still open (nice-to-haves):** auth + multi-tenancy (per-tenant API keys/JWT);
+> distributed tracing (OpenTelemetry → Tempo/Jaeger); CDC (Debezium) in place of
+> the outbox poller.
 
 ## 8. Interview talking points this unlocks
 

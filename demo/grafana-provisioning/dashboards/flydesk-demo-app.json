@@ -1,0 +1,146 @@
+{
+  "uid": "flydesk-demo-app",
+  "title": "FlyDesk — App & Business (RED)",
+  "tags": ["flydesk", "demo", "application"],
+  "editable": true,
+  "schemaVersion": 39,
+  "time": { "from": "now-30m", "to": "now" },
+  "refresh": "10s",
+  "templating": {
+    "list": [
+      {
+        "name": "view",
+        "label": "Endpoint (view)",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(flydesk_http_requests_total, view)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "name": "Restarts",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "enable": true,
+        "expr": "changes(process_start_time_seconds{job=~\"flydesk.*\"}[2m]) > 0",
+        "iconColor": "orange",
+        "titleFormat": "process restart",
+        "step": "60s"
+      }
+    ]
+  },
+  "panels": [
+    { "type": "row", "title": "Business", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 } },
+    {
+      "type": "stat", "title": "Bookings created", "id": 1,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 5, "x": 0, "y": 1 },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } } },
+      "targets": [ { "refId": "A", "expr": "sum(flydesk_bookings_total)" } ]
+    },
+    {
+      "type": "stat", "title": "Tickets issued", "id": 2,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 5, "x": 5, "y": 1 },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } } },
+      "targets": [ { "refId": "A", "expr": "sum(flydesk_tickets_issued_total)" } ]
+    },
+    {
+      "type": "stat", "title": "Searches served", "id": 3,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 5, "x": 10, "y": 1 },
+      "targets": [ { "refId": "A", "expr": "sum(flydesk_searches_total)" } ]
+    },
+    {
+      "type": "gauge", "title": "Cache hit ratio", "id": 4,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 4, "x": 15, "y": 1 },
+      "fieldConfig": { "defaults": {
+        "unit": "percent", "min": 0, "max": 100,
+        "thresholds": { "mode": "absolute", "steps": [
+          { "color": "red", "value": null }, { "color": "yellow", "value": 30 }, { "color": "green", "value": 60 } ] }
+      } },
+      "targets": [ { "refId": "A", "expr": "100 * sum(flydesk_searches_total{cached=\"true\"}) / clamp_min(sum(flydesk_searches_total), 1)" } ]
+    },
+    {
+      "type": "stat", "title": "Degraded providers (5m)", "id": 5,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 5, "x": 19, "y": 1 },
+      "fieldConfig": { "defaults": {
+        "thresholds": { "mode": "absolute", "steps": [
+          { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } } },
+      "targets": [ { "refId": "A", "expr": "sum(increase(flydesk_provider_degraded_total[5m]))" } ]
+    },
+    {
+      "type": "timeseries", "title": "Bookings & tickets (rate/1m)", "id": 6,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(flydesk_bookings_total[1m]))", "legendFormat": "bookings" },
+        { "refId": "B", "expr": "sum(rate(flydesk_tickets_issued_total[1m]))", "legendFormat": "tickets" }
+      ]
+    },
+    {
+      "type": "timeseries", "title": "Searches by cache hit/miss (rate/1m)", "id": 7,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "targets": [ { "refId": "A", "expr": "sum(rate(flydesk_searches_total[1m])) by (cached)", "legendFormat": "cached={{cached}}" } ]
+    },
+
+    { "type": "row", "title": "HTTP — RED (Rate · Errors · Duration)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 } },
+    {
+      "type": "timeseries", "title": "Request rate (req/s) by view", "id": 8,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 15 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [ { "refId": "A", "expr": "sum(rate(flydesk_http_requests_total{view=~\"$view\"}[1m])) by (view)", "legendFormat": "{{view}}" } ]
+    },
+    {
+      "type": "timeseries", "title": "Errors (rate/5m): 5xx & 4xx", "id": 9,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 15 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(flydesk_http_requests_total{view=~\"$view\", status=~\"5..\"}[5m]))", "legendFormat": "5xx (server)" },
+        { "refId": "B", "expr": "sum(rate(flydesk_http_requests_total{view=~\"$view\", status=~\"4..\"}[5m]))", "legendFormat": "4xx (client)" }
+      ]
+    },
+    {
+      "type": "timeseries", "title": "Latency p50 / p90 / p99 (s)", "id": 10,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.50, sum(rate(flydesk_http_request_duration_seconds_bucket{view=~\"$view\"}[5m])) by (le))", "legendFormat": "p50" },
+        { "refId": "B", "expr": "histogram_quantile(0.90, sum(rate(flydesk_http_request_duration_seconds_bucket{view=~\"$view\"}[5m])) by (le))", "legendFormat": "p90" },
+        { "refId": "C", "expr": "histogram_quantile(0.99, sum(rate(flydesk_http_request_duration_seconds_bucket{view=~\"$view\"}[5m])) by (le))", "legendFormat": "p99" }
+      ]
+    },
+
+    { "type": "row", "title": "Streaming (outbox → Kafka → consumers)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 } },
+    {
+      "type": "timeseries", "title": "Outbox events relayed (rate/1m)", "id": 11,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "targets": [ { "refId": "A", "expr": "sum(rate(flydesk_outbox_published_total[1m]))", "legendFormat": "relayed" } ]
+    },
+    {
+      "type": "timeseries", "title": "Provider degradations (rate/5m) by provider", "id": 12,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+      "targets": [ { "refId": "A", "expr": "sum(rate(flydesk_provider_degraded_total[5m])) by (provider)", "legendFormat": "{{provider}}" } ]
+    },
+    {
+      "type": "timeseries", "title": "Kafka consumer lag (messages behind)", "id": 13,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "targets": [ { "refId": "A", "expr": "sum by (redpanda_group, redpanda_topic) (redpanda_kafka_consumer_group_lag_sum)", "legendFormat": "{{redpanda_group}} / {{redpanda_topic}}" } ]
+    }
+  ]
+}

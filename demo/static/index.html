@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FlyDesk — Demo Cockpit</title>
+<style>
+  :root {
+    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --line:#334155;
+    --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+    --ok:#22c55e; --warn:#f59e0b; --pending:#f59e0b; --confirmed:#38bdf8; --ticketed:#22c55e;
+    --code:#0b1220;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+         background:var(--bg); color:var(--ink); line-height:1.5; }
+  header { padding:20px 28px; border-bottom:1px solid var(--line);
+           background:linear-gradient(90deg,#0f172a,#12203b); }
+  header h1 { margin:0; font-size:22px; letter-spacing:.3px; }
+  header .sub { color:var(--muted); font-size:13px; margin-top:4px; }
+  .badge-demo { display:inline-block; font-size:11px; padding:2px 8px; border-radius:999px;
+                background:#312e81; color:#c7d2fe; margin-left:8px; vertical-align:middle; }
+  nav { display:flex; gap:4px; padding:0 28px; border-bottom:1px solid var(--line);
+        background:var(--panel); overflow-x:auto; }
+  nav button { background:none; border:none; color:var(--muted); padding:14px 16px;
+               font-size:14px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; }
+  nav button.active { color:var(--accent); border-bottom-color:var(--accent); }
+  main { padding:24px 28px; max-width:1100px; }
+  section { display:none; } section.active { display:block; }
+  h2 { font-size:17px; margin:0 0 12px; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+  label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  input { background:var(--panel2); border:1px solid var(--line); color:var(--ink);
+          padding:9px 10px; border-radius:8px; font-size:14px; }
+  button.act { background:var(--accent); color:#082033; border:none; padding:10px 16px;
+               border-radius:8px; font-weight:600; cursor:pointer; font-size:14px; }
+  button.act:hover { filter:brightness(1.08); }
+  button.ghost { background:var(--panel2); color:var(--ink); border:1px solid var(--line);
+                 padding:8px 12px; border-radius:8px; cursor:pointer; font-size:13px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px;
+          padding:14px 16px; margin:12px 0; }
+  .offer { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .offer .route { font-weight:600; }
+  .offer .meta { color:var(--muted); font-size:13px; }
+  .price { font-size:18px; font-weight:700; color:var(--accent); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:600; }
+  .pill { font-size:11px; padding:2px 9px; border-radius:999px; font-weight:600; }
+  .pill.pending { background:#422006; color:#fbbf24; }
+  .pill.confirmed { background:#082f49; color:#7dd3fc; }
+  .pill.ticketed { background:#052e1b; color:#4ade80; }
+  .codelink { background:var(--code); border:1px solid var(--line); border-radius:10px;
+              padding:12px 14px; margin:14px 0; font-size:13px; }
+  .codelink b { color:var(--accent2); }
+  code { background:#0b1220; border:1px solid var(--line); padding:1px 6px; border-radius:5px;
+         font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; color:#a5b4fc; }
+  .muted { color:var(--muted); }
+  .ttl { font-variant-numeric:tabular-nums; color:var(--warn); font-weight:600; }
+  .toast { position:fixed; right:20px; bottom:20px; background:var(--panel2);
+           border:1px solid var(--line); padding:12px 16px; border-radius:10px;
+           font-size:13px; max-width:360px; box-shadow:0 8px 30px rgba(0,0,0,.4);
+           opacity:0; transform:translateY(8px); transition:.2s; }
+  .toast.show { opacity:1; transform:none; }
+  ul.tight { margin:6px 0; padding-left:20px; } ul.tight li { margin:3px 0; }
+  a { color:var(--accent); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:760px){ .grid2 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>FlyDesk — Demo Cockpit <span class="badge-demo">demo · does not modify flydesk/</span></h1>
+  <div class="sub">Provider-agnostic flight search &amp; booking backend — an interactive demo of the shop → book → ticket flow.</div>
+</header>
+
+<nav>
+  <button data-tab="search" class="active">🔎 Search &amp; book</button>
+  <button data-tab="cache">🗂️ Available flights (cache)</button>
+  <button data-tab="bookings">🎫 Bookings (Mongo)</button>
+  <button data-tab="info">📖 How it works / Instructions</button>
+</nav>
+
+<main>
+  <!-- ============ SEARCH ============ -->
+  <section id="search" class="active">
+    <h2>Search flights and book</h2>
+    <div class="row">
+      <div><label>From (IATA)</label><input id="origin" value="LHR" size="5" /></div>
+      <div><label>To (IATA)</label><input id="destination" value="JFK" size="5" /></div>
+      <div><label>Departure date</label><input id="date" type="date" value="2026-08-15" /></div>
+      <button class="act" onclick="doSearch()">🔎 Search flights</button>
+    </div>
+    <div class="codelink">
+      <b>What runs behind it:</b> the button seeds <i>real</i> Duffel payloads from
+      <code>demo/fixtures/</code> through the production anti-corruption layer
+      (<code>flydesk/providers/duffel/mapper.py</code> → <code>map_offer</code>) and writes them to
+      Redis under the same key the app uses
+      (<code>flydesk/search/cache.py</code> → <code>offers:&lt;hash&gt;</code>), just with a longer TTL.
+    </div>
+    <div id="searchResults"></div>
+  </section>
+
+  <!-- ============ CACHE ============ -->
+  <section id="cache">
+    <h2>Flights currently in the cache (Redis) <button class="ghost" onclick="loadCache()">↻ Refresh</button></h2>
+    <div class="codelink">
+      <b>The point:</b> offers are <i>ephemeral</i> — they only live for their TTL. This shows exactly
+      what is in Redis right now and when it expires. Read path: <code>demo/seed.py</code> →
+      <code>list_cached()</code> (SCAN over <code>offers:*</code>). Refresh to watch the countdown drop.
+    </div>
+    <div id="cacheResults"><p class="muted">Click “Search flights”, then refresh.</p></div>
+  </section>
+
+  <!-- ============ BOOKINGS ============ -->
+  <section id="bookings">
+    <h2>Booking history (MongoDB) <button class="ghost" onclick="loadBookings()">↻ Refresh</button></h2>
+    <div class="codelink">
+      <b>What runs behind it:</b> a dump of the durable <code>orders</code> collection in MongoDB
+      (<code>flydesk/common/mongo.py</code>). Bookings are created by the genuine use-case
+      <code>flydesk/bookings/services.py</code> → <code>create_booking</code> (idempotency + outbox).
+      The <code>confirmed → ticketed</code> transition is done asynchronously by the consumer
+      <code>flydesk/events/consumers.py</code> → <code>handle_ticketing</code> (over Kafka) —
+      refresh after a moment to see it change.
+    </div>
+    <div id="bookingsResults"><p class="muted">No data yet — book a flight on the “Search” tab.</p></div>
+  </section>
+
+  <!-- ============ INFO ============ -->
+  <section id="info">
+    <h2>How it works — and how to run it</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3 style="margin-top:0">▶️ Run it (locally)</h3>
+        <ol class="tight">
+          <li>Install Docker Desktop.</li>
+          <li>From the repo root:<br><code>docker compose -f demo/docker-compose.demo.yml up --build</code></li>
+          <li>Open <a href="http://localhost:8500" target="_blank">http://localhost:8500</a> — this demo.</li>
+          <li>Grafana: <a href="http://localhost:3001" target="_blank">http://localhost:3001</a>
+              (anonymous) → dashboard <b>FlyDesk — Demo</b>.</li>
+          <li>Prometheus: <a href="http://localhost:9091" target="_blank">:9091</a>.</li>
+        </ol>
+        <p class="muted">Everything runs offline — no Duffel token, data comes from fixtures.
+        This overlay brings up the whole stack; you don’t run the base <code>docker compose up</code> too.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">🧭 2-minute interview walkthrough</h3>
+        <ol class="tight">
+          <li><b>Search flights</b> → a list appears (AA / IB / TP from a real capture).</li>
+          <li><b>Available flights</b> tab → point at the shrinking TTL = offers are ephemeral.</li>
+          <li><b>Book</b> on an offer → a new PNR shows up in <b>Bookings</b> (status <i>confirmed</i>).</li>
+          <li>Refresh after a few seconds → status flips to <i>ticketed</i> (Kafka consumer).</li>
+          <li><b>Book twice (same key)</b> → still one booking = idempotency.</li>
+          <li>In <b>Grafana</b> the <code>bookings</code> / <code>tickets</code> counters climb live.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🗺️ Map: button → code</h3>
+      <table>
+        <tr><th>Action in the demo</th><th>Real code</th></tr>
+        <tr><td>Search flights</td><td><code>flydesk/providers/duffel/mapper.py</code> (ACL) + <code>flydesk/search/cache.py</code> (cache key)</td></tr>
+        <tr><td>Search fan-out (prod)</td><td><code>flydesk/search/async_service.py</code> → <code>search_all</code></td></tr>
+        <tr><td>Book</td><td><code>flydesk/bookings/services.py</code> → <code>create_booking</code></td></tr>
+        <tr><td>Idempotency</td><td>Redis SETNX + unique Mongo index (<code>bookings/repository.py</code>)</td></tr>
+        <tr><td>Ticket issuance</td><td><code>flydesk/events/consumers.py</code> → <code>handle_ticketing</code> (Kafka)</td></tr>
+        <tr><td>Booking history</td><td>MongoDB <code>orders</code> (<code>flydesk/common/mongo.py</code>)</td></tr>
+      </table>
+      <p class="muted" style="margin-bottom:0">This demo is a <b>separate entity</b> under <code>demo/</code>. It does not change the
+      application code — it wires in by import and swaps the provider for an offline <code>DemoProvider</code> at runtime.</p>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const money = (m) => `${m.amount} ${m.currency}`;
+function toast(msg, ok=true){ const t=$('toast'); t.textContent=msg; t.style.borderColor=ok?'#166534':'#7f1d1d'; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
+
+// tabs
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('section').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); $(b.dataset.tab).classList.add('active');
+  if(b.dataset.tab==='cache') loadCache();
+  if(b.dataset.tab==='bookings') loadBookings();
+});
+
+let lastKey = null; // for the idempotency demo
+
+async function doSearch(){
+  const body = { origin:$('origin').value.trim().toUpperCase(),
+                 destination:$('destination').value.trim().toUpperCase(),
+                 departure_date:$('date').value };
+  try{
+    const r = await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok) throw new Error((await r.json()).detail || r.status);
+    const d = await r.json();
+    renderOffers(d.offers, d.ttl_seconds);
+    toast(`Found ${d.count} offers · cache TTL ${d.ttl_seconds}s`);
+  }catch(e){ toast('Search error: '+e.message,false); }
+}
+
+function renderOffers(offers, ttl){
+  if(!offers.length){ $('searchResults').innerHTML='<p class="muted">No offers.</p>'; return; }
+  $('searchResults').innerHTML = offers.map(o=>{
+    const sl = o.slices[0];
+    const route = `${sl.origin.iata_code} → ${sl.destination.iata_code}`;
+    const carrier = o.owner.name || o.owner.iata_code;
+    return `<div class="card offer">
+      <div>
+        <div class="route">${carrier} · ${route}</div>
+        <div class="meta">${o.total_stops} stops · ${o.cabin_class||'economy'} · offer <code>${o.id.slice(0,16)}…</code></div>
+      </div>
+      <div style="text-align:right">
+        <div class="price">${money(o.total)}</div>
+        <div style="margin-top:8px">
+          <button class="act" onclick="book('${o.id}', false)">Book</button>
+          <button class="ghost" onclick="book('${o.id}', true)">Book twice (same key)</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function book(offerId, sameKey){
+  const key = (sameKey && lastKey) ? lastKey : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+  try{
+    const r = await fetch('/api/book',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({offer_id:offerId, idempotency_key:key})});
+    if(!r.ok) throw new Error((await r.json()).detail || r.status);
+    const d = await r.json(); lastKey = d.idempotency_key;
+    const o = d.order;
+    if(sameKey) toast(`Idempotency: same key → same booking ${o.id.slice(0,18)}…`);
+    else toast(`Booked · PNR ${o.booking_reference} · status ${o.status}`);
+  }catch(e){ toast('Booking error: '+e.message,false); }
+}
+
+async function loadCache(){
+  try{
+    const d = await (await fetch('/api/cache')).json();
+    if(!d.bundles.length){ $('cacheResults').innerHTML='<p class="muted">Cache empty — click “Search flights”.</p>'; return; }
+    $('cacheResults').innerHTML = d.bundles.map(b=>`
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div><code>${b.key}</code> · ${b.count} offers</div>
+          <div>expires in: <span class="ttl">${b.ttl_seconds}s</span></div>
+        </div>
+        <table style="margin-top:8px">
+          <tr><th>Carrier</th><th>Route</th><th>Stops</th><th>Price</th></tr>
+          ${b.offers.map(o=>{const s=o.slices[0];return `<tr>
+            <td>${o.owner.name||o.owner.iata_code}</td>
+            <td>${s.origin.iata_code} → ${s.destination.iata_code}</td>
+            <td>${o.total_stops}</td>
+            <td>${money(o.total)}</td></tr>`;}).join('')}
+        </table>
+      </div>`).join('');
+  }catch(e){ $('cacheResults').innerHTML='<p class="muted">Error: '+e.message+'</p>'; }
+}
+
+async function loadBookings(){
+  try{
+    const d = await (await fetch('/api/bookings')).json();
+    if(!d.count){ $('bookingsResults').innerHTML='<p class="muted">No bookings yet — book a flight.</p>'; return; }
+    $('bookingsResults').innerHTML = `<div class="card"><table>
+      <tr><th>PNR</th><th>Status</th><th>Route</th><th>Amount</th><th>Created</th><th>Order</th></tr>
+      ${d.bookings.map(o=>{const s=o.slices[0]; const st=(o.status||'').toLowerCase();
+        return `<tr>
+          <td><b>${o.booking_reference||'—'}</b></td>
+          <td><span class="pill ${st}">${st}</span></td>
+          <td>${s.origin.iata_code} → ${s.destination.iata_code}</td>
+          <td>${money(o.total)}</td>
+          <td class="muted">${(o.created_at||'').replace('T',' ').slice(0,19)}</td>
+          <td><code>${(o.id||'').slice(0,18)}…</code></td></tr>`;}).join('')}
+    </table></div>`;
+  }catch(e){ $('bookingsResults').innerHTML='<p class="muted">Error: '+e.message+'</p>'; }
+}
+
+// live TTL countdown on the cache tab
+setInterval(()=>{ document.querySelectorAll('.ttl').forEach(el=>{
+  const n=parseInt(el.textContent); if(!isNaN(n)&&n>0) el.textContent=(n-1)+'s'; });}, 1000);
+</script>
+</body>
+</html>

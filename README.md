@@ -148,16 +148,17 @@ curl -s localhost:8000/api/v1/search -H 'Content-Type: application/json' -d '{
   "cabin_class": "economy", "passengers": [{"type": "adult"}]
 }'
 
-# Book an offer (idempotent — repeat with the same key, get the same order)
+# Book an offer (idempotent — repeat with the same key, get the same order).
+# Paste an "id" from the search response above as offer_id; Duffel needs gender.
 curl -s localhost:8000/api/v1/bookings \
-  -H 'Content-Type: application/json' -H 'Idempotency-Key: 2f9a…' -d '{
-  "offer_id": "off_…",
-  "passengers": [{"given_name":"Tony","family_name":"Stark","born_on":"1980-07-24",
-    "email":"tony@stark.com","phone_number":"+442080160508"}]
+  -H 'Content-Type: application/json' -H 'Idempotency-Key: 2f9a1c7e-0000-4a00-8b00-000000000001' -d '{
+  "offer_id": "off_0000PASTE_FROM_SEARCH",
+  "passengers": [{"type":"adult","gender":"m","given_name":"Tony","family_name":"Stark",
+    "born_on":"1980-07-24","email":"tony@stark.com","phone_number":"+442080160508"}]
 }'
 
-# Fetch a booking
-curl -s localhost:8000/api/v1/bookings/ord_…
+# Fetch a booking (use the "id" returned by the book call above)
+curl -s localhost:8000/api/v1/bookings/ord_0000PASTE_FROM_BOOK
 ```
 
 A normalized offer looks like:
@@ -171,6 +172,27 @@ A normalized offer looks like:
     "stops": 0, "segments": [{ "flight_number":"BA175", "aircraft":"Boeing 777-300ER" }] }]
 }
 ```
+
+## Interactive demo (cockpit + Grafana)
+
+For a click-through view of the whole flow there's a small, self-contained demo
+in [`demo/`](demo/) — a web "cockpit" plus Grafana dashboards. It's a **separate
+entity**: it reuses the real code by import (and swaps in an offline provider), so
+it **doesn't modify anything under `flydesk/`**.
+
+```bash
+docker compose -f demo/docker-compose.demo.yml up --build
+#   http://localhost:8500   cockpit: Search → Book → watch confirmed → ticketed
+#   http://localhost:3001   Grafana → App&Business (RED) · Infrastructure · Logs
+#   http://localhost:9091   Prometheus
+```
+
+Fully offline by default (no Duffel token — offers are generated per route/date and
+run through the real ACL; set `DEMO_LIVE_DUFFEL=1` + a token for live sandbox
+offers). It shows ephemeral offers in the Redis cache with a live TTL, idempotent
+booking ("book twice, one order"), the async Kafka ticketing path, and three
+Grafana dashboards (metrics + Loki logs) that react to the clicks. See
+[demo/README.md](demo/README.md) and [ADR 0008](docs/adr/0008-demo-cockpit.md).
 
 ## The Pydantic exercise
 
